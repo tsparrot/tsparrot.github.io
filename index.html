@@ -67,7 +67,7 @@
 <div class="widget-wrap" id="markdown"><div class="widget-header cap dis-select"><span class="name">EL PSY CONGROO</span></div><div class="widget-body fs14"><p>Android开发与生活的点点滴滴</p>
 </div></div>
 
-<div class="widget-wrap" id="recent"><div class="widget-header cap dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><div class="more-item"><a class="title" href="/2020/08/07/%E6%B2%99%E5%8F%91%E4%B8%8A%E7%9A%84%E7%99%BD%E6%97%A5%E6%A2%A6%E4%B8%8E%E4%BD%A0/">沙发上的白日梦与你</a></div><div class="more-item"><a class="title" href="/2018/07/14/hello-world/">你好，世界</a></div><div class="more-item"><a class="title" href="/2017/12/28/%E8%BF%99%E4%B8%AA%E4%B8%96%E7%95%8C%E4%BC%9A%E5%A5%BD%E5%90%97%EF%BC%8C%E8%BF%98%E6%98%AF%E6%9B%B4%E7%83%82/">这个世界会好吗，还是更烂</a></div></div></div>
+<div class="widget-wrap" id="recent"><div class="widget-header cap dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><div class="more-item"><a class="title" href="/2021/05/20/Android%20Studio%20Sync%20Failed%E8%AE%B0%E5%BD%95/">Android Studio Sync Failed记录</a></div><div class="more-item"><a class="title" href="/2021/03/10/%E4%BB%8EPressableTextView%20click%20%E8%B8%A9%E5%9D%91%E7%9C%8B%E4%BA%8B%E4%BB%B6%E5%88%86%E5%8F%91/">从PressableTextView click 踩坑看事件分发</a></div><div class="more-item"><a class="title" href="/2021/01/25/%E4%B8%BB%E5%8A%A8%E6%80%9D%E8%80%83%EF%BC%8C%E6%8C%91%E6%88%98%E8%87%AA%E6%88%91%E2%80%94%E2%80%94%E5%AE%9E%E4%B9%A0%E6%80%BB%E7%BB%93/">主动思考，挑战自我——实习总结</a></div><div class="more-item"><a class="title" href="/2020/12/30/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E6%BC%AB%E8%B0%88%EF%BC%9A%E4%BB%8E%E4%BE%9D%E8%B5%96%E6%B3%A8%E5%85%A5%E7%9C%8B%E6%A8%A1%E5%9D%97%E8%A7%A3%E8%97%95/">设计模式漫谈：从依赖注入看模块解藕</a></div><div class="more-item"><a class="title" href="/2020/12/16/Android%E5%9B%BE%E6%96%87%E6%B7%B7%E6%8E%92%E5%88%9D%E7%AA%A5/">Android图文混排初窥</a></div></div></div>
 </div>
 
 
@@ -105,17 +105,83 @@
   </nav>
 </div>
 
-  <div class="post-list post"><a class="post-card post " href="/2020/08/07/%E6%B2%99%E5%8F%91%E4%B8%8A%E7%9A%84%E7%99%BD%E6%97%A5%E6%A2%A6%E4%B8%8E%E4%BD%A0/">
+  <div class="post-list post"><a class="post-card post " href="/2021/05/20/Android%20Studio%20Sync%20Failed%E8%AE%B0%E5%BD%95/">
+<article class="md"><h2 class="post-title">Android Studio Sync Failed记录</h2><div class="excerpt"><p>背景介绍修复系统后重新安装了Android Studio，例行Hello World, 下载gradle插件时久违地碰到了Sync Failed，回想全面爬梯前被这个问题支配的恐惧，觉得有必要单开一帖记录一下。
+网络环境
+已爬梯，全局模式。
+
+未配置Android Studio内部爬梯功能
+
+build.gradle为默认配置
+12345678910111213141516171819202...</p></div><div class="meta cap"><span class="cap" id="post-meta">发布于&nbsp;<time datetime="2021-05-19T18:47:00.000Z">2021-05-20</time></span></div></article>
+</a><a class="post-card post " href="/2021/03/10/%E4%BB%8EPressableTextView%20click%20%E8%B8%A9%E5%9D%91%E7%9C%8B%E4%BA%8B%E4%BB%B6%E5%88%86%E5%8F%91/">
+<article class="md"><h2 class="post-title">从PressableTextView click 踩坑看事件分发</h2><div class="excerpt"><p>背景介绍开发过程中某个页面利用自定义的pressableTextView 作为底部按钮。
+该自定义View重写了textView的onTouchEvent，以增加一个透明度为0.5的按压态，具体机制是对当前的MoveEvent事件作判断，如果是Action_Down则把该TextView的透明度设置为0.5f，如果是Action_Up 或者 Action_Cancel则把透明度设置回1.0f...</p></div><div class="meta cap"><span class="cap" id="post-meta">发布于&nbsp;<time datetime="2021-03-10T04:00:00.000Z">2021-03-10</time></span></div></article>
+</a><a class="post-card post " href="/2021/01/25/%E4%B8%BB%E5%8A%A8%E6%80%9D%E8%80%83%EF%BC%8C%E6%8C%91%E6%88%98%E8%87%AA%E6%88%91%E2%80%94%E2%80%94%E5%AE%9E%E4%B9%A0%E6%80%BB%E7%BB%93/">
+<article class="md"><h2 class="post-title">主动思考，挑战自我——实习总结</h2><div class="excerpt"><p>自我工作总结150+次提交，18个sprint，还有3次有点尴尬的延期，借这次总结，先回顾了下自己的工作数据，从入职到现在四个月，学到了很多东西。
+技术方面，开发节奏有很大提升空间，有时候会因为一些不必要的点过度纠结，导致迟迟不能迈出第一步，有两次延期都与此有关。后来也反思过这个问题，关键在于拆分需求，把主体的框架先搭出来，避免阻塞不前。
+另外一个比较关键的问题是，如何让业务需求不止于学习使...</p></div><div class="meta cap"><span class="cap" id="post-meta">发布于&nbsp;<time datetime="2021-01-25T07:54:00.000Z">2021-01-25</time></span></div></article>
+</a><a class="post-card post " href="/2020/12/30/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E6%BC%AB%E8%B0%88%EF%BC%9A%E4%BB%8E%E4%BE%9D%E8%B5%96%E6%B3%A8%E5%85%A5%E7%9C%8B%E6%A8%A1%E5%9D%97%E8%A7%A3%E8%97%95/">
+<article class="md"><h2 class="post-title">设计模式漫谈：从依赖注入看模块解藕</h2><div class="excerpt"><p>依赖初学面向对象时，经常会举的一个例子是购物，从这个过程里很容易抽象出Customer类：
+123456789class Customer&#123;    // 下订单  public void order(Product product)();    // 支付  public void pay();&#125;
+
+而Customer的buy行为需要传入一个Product类对象，代表这个...</p></div><div class="meta cap"><span class="cap" id="post-meta">发布于&nbsp;<time datetime="2020-12-30T07:23:00.000Z">2020-12-30</time></span></div></article>
+</a><a class="post-card post " href="/2020/12/16/Android%E5%9B%BE%E6%96%87%E6%B7%B7%E6%8E%92%E5%88%9D%E7%AA%A5/">
+<article class="md"><h2 class="post-title">Android图文混排初窥</h2><div class="excerpt"><p>背景在使用textview时，常常会有文本混排的需求（一段文本中具有多个样式），如标题开头的标签，聊天消息中的表情等，考虑到不同尺寸屏幕的适配问题，简单粗暴地使用多个textView并不能满足要求。
+解决方案Android官方对文本&#x2F;图文混排提供了支持：
+
+
+在TextView的XML布局文件中添加Compound Drawable属性；
+在对TextView设置字符串时，可以设置...</p></div><div class="meta cap"><span class="cap" id="post-meta">发布于&nbsp;<time datetime="2020-12-16T10:00:00.000Z">2020-12-16</time></span></div></article>
+</a><a class="post-card post " href="/2020/08/20/%E8%B8%89%E8%B7%84%E8%AE%B0/">
+<article class="md"><h2 class="post-title">踉跄记</h2><div class="excerpt"><p>那段时间老是觉得时间跑得比我快多了，身边参加秋招的同学都快冲线了，我还在那磨磨蹭蹭穿着鞋，甚至没进入跑道。对此我常常做的，并不是抓紧赶路，倒是自暴自弃似的，找些别的事做，“逃避虽然可耻，但很有用”，不知从何时起，我变得精于此道。转移注意力普通的方法是保持学习，不过要就着几首摇滚来学，一开始我听新裤子，《没有理想的人不伤心》，听追求理想的彭磊蔫蔫地说没有理想的人不伤心，特别是每次 我不要一直活...</p></div><div class="meta cap"><span class="cap" id="post-meta">发布于&nbsp;<time datetime="2020-08-20T11:55:00.000Z">2020-08-20</time></span></div></article>
+</a><a class="post-card post " href="/2020/08/07/%E6%B2%99%E5%8F%91%E4%B8%8A%E7%9A%84%E7%99%BD%E6%97%A5%E6%A2%A6%E4%B8%8E%E4%BD%A0/">
 <article class="md"><h2 class="post-title">沙发上的白日梦与你</h2><div class="excerpt"><p>之前聊起今年久违地在家里度过了春夏，从冬季一直来到立秋的八月，没想到在有生之年碰到了不可抗力。那天吃饭的时候也提过我曾多么殷切地期盼着开学，谈到那张原本在六个月前就离开神木去北京的火车票。
 可是从不久前的某一天开始我开始留恋起在家的时光来，甚至还希望不可抗力让这样待在家的时光一直持续下去，永远会有那条蜿蜒盘旋在三四号楼之间的信道，传达着彼此的讯息。
 其实说起来很奇妙，过去在感情上我总是抱着说...</p></div><div class="meta cap"><span class="cap" id="post-meta">发布于&nbsp;<time datetime="2020-08-06T18:56:19.000Z">2020-08-07</time></span></div></article>
-</a><a class="post-card post " href="/2018/07/14/hello-world/">
-<article class="md"><h2 class="post-title">你好，世界</h2><div class="excerpt"><p>Hello, world!
-</p></div><div class="meta cap"><span class="cap" id="post-meta">发布于&nbsp;<time datetime="2018-07-14T12:57:39.000Z">2018-07-14</time></span></div></article>
-</a><a class="post-card post " href="/2017/12/28/%E8%BF%99%E4%B8%AA%E4%B8%96%E7%95%8C%E4%BC%9A%E5%A5%BD%E5%90%97%EF%BC%8C%E8%BF%98%E6%98%AF%E6%9B%B4%E7%83%82/">
-<article class="md"><h2 class="post-title">这个世界会好吗，还是更烂</h2><div class="excerpt"><p>很多时候这个节目让我联想起《独唱团》，那本杂志出版到现在已经有七年，这七年里，罗永浩开始四处说相声卖手机，咪蒙兜售起了新时代的成功学与情感秘籍，艾未未被404，愤怒地计较着对错的韩寒也开始谈好坏，追求理想的青年不再谈理想，很多在那本书里留下名字的人都变得不一样了，但遗憾的是，我们的世界依然那个样。也正因此，我感动于今天依然有梁欢这样保持愤怒的人，也同样难过于到了今天我们还是在愤怒。《独唱团》...</p></div><div class="meta cap"><span class="cap" id="post-meta">发布于&nbsp;<time datetime="2017-12-28T12:26:16.000Z">2017-12-28</time></span></div></article>
+</a><a class="post-card post " href="/2020/04/29/%E9%9D%A2%E8%AF%95%E5%A4%8D%E7%9B%98-%E6%90%9C%E7%8B%97%EF%BC%9A%E5%BE%80%E5%89%8D%E8%BF%88%E7%9A%84%E8%BF%99%E4%B8%80%E6%AD%A5/">
+<article class="md"><h2 class="post-title">面试复盘-搜狗：往前迈的这一步</h2><div class="excerpt"><p>面试过程并不长，主要分为三部分，以下罗列出我在整个面试及准备过程中涉及到的知识点。
+(标√的是我觉得了解程度还可以，回答效果较好的)
+python基础：
+
+装饰器
+
+装饰器的概念和实现√
+
+引申至嵌套函数和闭包√
+（闭包那稍有卡壳，不过联想到可在装饰器里内置一些变量，也就说通了,之前看过耿哥的多巴胺框架的博文起了不小的帮助
+
+
+
+协程
+
+协程的特点√
+引申至python的多线程和多进程√
+多...</p></div><div class="meta cap"><span class="cap" id="post-meta">发布于&nbsp;<time datetime="2020-04-29T01:42:00.000Z">2020-04-29</time></span></div></article>
+</a><a class="post-card post " href="/2020/01/20/Raft%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">
+<article class="md"><h2 class="post-title">Raft学习笔记</h2><div class="excerpt"><p>在室友提议之下，开启Raft by Rust（挖坑）之旅。
+第一步，当然是读raft论文了。此前并没有接触过分布式协议，只对paxos略有耳闻，初读起来还颇为生涩，故将心得&#x2F;总结记录于此，若有错误，欢迎指正。
+论文地址附上
+有条件建议读英文版，中文不少地方翻译生硬。
+Leader竞选
+三种节点：Follower、Candidate 和 Leader。Leader 会周期性的发送心跳...</p></div><div class="meta cap"><span class="cap" id="post-meta">发布于&nbsp;<time datetime="2020-01-20T04:00:00.000Z">2020-01-20</time></span></div></article>
+</a><a class="post-card post " href="/2019/10/18/Django%E8%B8%A9%E5%9D%91%E5%B0%8F%E8%AE%B0/">
+<article class="md"><h2 class="post-title">Django踩坑小记</h2><div class="excerpt"><p>记录今天在对Cage的页面做一些小修改的时候遇到的问题：
+Django collected_staticdjango拥有极为便捷的一键收集静态资源功能：即利用 python3 manage.py collectstatic指令来将项目中的静态文件收集到 STATIC_ROOT指定的目录中。每个应用都可以有自己的static&#x2F;目录存放静态文件，还可以在 STATICFILES_DIR...</p></div><div class="meta cap"><span class="cap" id="post-meta">发布于&nbsp;<time datetime="2019-10-18T15:58:00.000Z">2019-10-18</time></span></div></article>
 </a></div>
   
+  <div class='paginator-wrap dis-select'>
+    <a class='paginator prev disable' href='/'>
+      <img src='https://cdn.jsdelivr.net/gh/cdn-x/placeholder@1.0.1/arrow/f049bbd4e88ec.svg'/>
+    </a>
+    <div class='paginator current'>
+      1<span class='sep'></span>2
+    </div>
+    <a class='paginator next' href='/page/2/'>
+      <img src='https://cdn.jsdelivr.net/gh/cdn-x/placeholder@1.0.1/arrow/064b95430caf4.svg'/>
+    </a>
+  </div>
+
 
 
 
