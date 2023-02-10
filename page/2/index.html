@@ -67,7 +67,7 @@
 <div class="widget-wrap" id="markdown"><div class="widget-header cap dis-select"><span class="name">EL PSY CONGROO</span></div><div class="widget-body fs14"><p>Android开发与生活的点点滴滴</p>
 </div></div>
 
-<div class="widget-wrap" id="recent"><div class="widget-header cap dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><div class="more-item"><a class="title" href="/2021/05/23/%E4%BB%8EJVM%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E6%9C%BA%E5%88%B6%E7%9C%8BAndroid%E5%86%85%E5%AD%98%E6%B3%84%E9%9C%B2/">从JVM垃圾回收机制看Android内存泄露</a></div><div class="more-item"><a class="title" href="/2021/05/20/Android%20Studio%20Sync%20Failed%E8%AE%B0%E5%BD%95/">Android Studio Sync Failed记录</a></div><div class="more-item"><a class="title" href="/2021/03/10/%E4%BB%8EPressableTextView%20click%20%E8%B8%A9%E5%9D%91%E7%9C%8B%E4%BA%8B%E4%BB%B6%E5%88%86%E5%8F%91/">从PressableTextView click 踩坑看事件分发</a></div><div class="more-item"><a class="title" href="/2021/01/25/%E4%B8%BB%E5%8A%A8%E6%80%9D%E8%80%83%EF%BC%8C%E6%8C%91%E6%88%98%E8%87%AA%E6%88%91%E2%80%94%E2%80%94%E5%AE%9E%E4%B9%A0%E6%80%BB%E7%BB%93/">主动思考，挑战自我——实习总结</a></div><div class="more-item"><a class="title" href="/2020/12/30/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E6%BC%AB%E8%B0%88%EF%BC%9A%E4%BB%8E%E4%BE%9D%E8%B5%96%E6%B3%A8%E5%85%A5%E7%9C%8B%E6%A8%A1%E5%9D%97%E8%A7%A3%E8%97%95/">设计模式漫谈：从依赖注入看模块解藕</a></div></div></div>
+<div class="widget-wrap" id="recent"><div class="widget-header cap dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><div class="more-item"><a class="title" href="/2021/05/30/Android%20SDK%20Version%E5%B0%8F%E7%BB%93/">Android SDK Version小结</a></div><div class="more-item"><a class="title" href="/2021/05/23/%E4%BB%8EJVM%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E6%9C%BA%E5%88%B6%E7%9C%8BAndroid%E5%86%85%E5%AD%98%E6%B3%84%E9%9C%B2/">从JVM垃圾回收机制看Android内存泄露</a></div><div class="more-item"><a class="title" href="/2021/05/20/Android%20Studio%20Sync%20Failed%E8%AE%B0%E5%BD%95/">Android Studio Sync Failed记录</a></div><div class="more-item"><a class="title" href="/2021/03/10/%E4%BB%8EPressableTextView%20click%20%E8%B8%A9%E5%9D%91%E7%9C%8B%E4%BA%8B%E4%BB%B6%E5%88%86%E5%8F%91/">从PressableTextView click 踩坑看事件分发</a></div><div class="more-item"><a class="title" href="/2021/01/25/%E4%B8%BB%E5%8A%A8%E6%80%9D%E8%80%83%EF%BC%8C%E6%8C%91%E6%88%98%E8%87%AA%E6%88%91%E2%80%94%E2%80%94%E5%AE%9E%E4%B9%A0%E6%80%BB%E7%BB%93/">主动思考，挑战自我——实习总结</a></div></div></div>
 </div>
 
 
@@ -105,7 +105,14 @@
   </nav>
 </div>
 
-  <div class="post-list post"><a class="post-card post " href="/2019/10/18/Django%E8%B8%A9%E5%9D%91%E5%B0%8F%E8%AE%B0/">
+  <div class="post-list post"><a class="post-card post " href="/2020/01/20/Raft%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">
+<article class="md"><h2 class="post-title">Raft学习笔记</h2><div class="excerpt"><p>在室友提议之下，开启Raft by Rust（挖坑）之旅。
+第一步，当然是读raft论文了。此前并没有接触过分布式协议，只对paxos略有耳闻，初读起来还颇为生涩，故将心得&#x2F;总结记录于此，若有错误，欢迎指正。
+论文地址附上
+有条件建议读英文版，中文不少地方翻译生硬。
+Leader竞选
+三种节点：Follower、Candidate 和 Leader。Leader 会周期性的发送心跳...</p></div><div class="meta cap"><span class="cap" id="post-meta">发布于&nbsp;<time datetime="2020-01-20T04:00:00.000Z">2020-01-20</time></span></div></article>
+</a><a class="post-card post " href="/2019/10/18/Django%E8%B8%A9%E5%9D%91%E5%B0%8F%E8%AE%B0/">
 <article class="md"><h2 class="post-title">Django踩坑小记</h2><div class="excerpt"><p>记录今天在对Cage的页面做一些小修改的时候遇到的问题：
 Django collected_staticdjango拥有极为便捷的一键收集静态资源功能：即利用 python3 manage.py collectstatic指令来将项目中的静态文件收集到 STATIC_ROOT指定的目录中。每个应用都可以有自己的static&#x2F;目录存放静态文件，还可以在 STATICFILES_DIR...</p></div><div class="meta cap"><span class="cap" id="post-meta">发布于&nbsp;<time datetime="2019-10-18T15:58:00.000Z">2019-10-18</time></span></div></article>
 </a><a class="post-card post " href="/2019/10/14/%E9%9D%A2%E8%AF%95%E5%A4%8D%E7%9B%98-%E4%BB%8A%E6%97%A5%E7%9A%84%E6%BB%91%E9%93%81%E5%8D%A2/">
