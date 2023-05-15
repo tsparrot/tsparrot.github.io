@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang='zh-CN'>
+
+<head>
+  <meta name="generator" content="Hexo 6.3.0">
+  <meta charset="utf-8">
+  
+
+  <meta http-equiv='x-dns-prefetch-control' content='on' />
+  <link rel='dns-prefetch' href='https://cdn.jsdelivr.net'>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel='dns-prefetch' href='//unpkg.com'>
+
+  <meta name="renderer" content="webkit">
+  <meta name="force-rendering" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  <meta name="HandheldFriendly" content="True" >
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="theme-color" content="#f8f8f8">
+  <title>从JVM垃圾回收机制看Android内存泄露 - 鹦鹉学舌</title>
+
+  
+
+  
+    <meta name="description" content="JVM垃圾回收机制JVM内存模型了解JVM垃圾回收机制之前，有必要先介绍JVM的内存模型机制，以阐明我们常说的JVM垃圾回收机制是从何处回收垃圾。 注：这里提到的JVM内存模型和java内存模型并不是一回事，注意区分 在Java中，我们的源代码编译后会生成以.class为后缀的字节码（在Android中会通过dx工具进一步翻译、重构、解释、压缩成Android虚拟机支持的Dex文件） Class字">
+<meta property="og:type" content="article">
+<meta property="og:title" content="从JVM垃圾回收机制看Android内存泄露">
+<meta property="og:url" content="https://tsparrot.github.io/2021/05/23/%E4%BB%8EJVM%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E6%9C%BA%E5%88%B6%E7%9C%8BAndroid%E5%86%85%E5%AD%98%E6%B3%84%E9%9C%B2/index.html">
+<meta property="og:site_name" content="鹦鹉学舌">
+<meta property="og:description" content="JVM垃圾回收机制JVM内存模型了解JVM垃圾回收机制之前，有必要先介绍JVM的内存模型机制，以阐明我们常说的JVM垃圾回收机制是从何处回收垃圾。 注：这里提到的JVM内存模型和java内存模型并不是一回事，注意区分 在Java中，我们的源代码编译后会生成以.class为后缀的字节码（在Android中会通过dx工具进一步翻译、重构、解释、压缩成Android虚拟机支持的Dex文件） Class字">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2021-05-22T16:00:00.000Z">
+<meta property="article:modified_time" content="2021-05-22T16:00:00.000Z">
+<meta property="article:author" content="tsparrot">
+<meta property="article:tag" content="Android">
+<meta property="article:tag" content="Java">
+<meta name="twitter:card" content="summary">
+  
+  
+
+  <!-- feed -->
+  
+
+  
+    
+<link rel="stylesheet" href="/css/main.css">
+
+  
+
+  
+
+  
+</head>
+
+<body>
+  
+
+
+
+
+  <div class='l_body' id='start'>
+    <aside class='l_left' layout='post'>
+    
+
+
+<header class="header">
+
+<div class="logo-wrap"><a class="title" href="/"><div class="main">鹦鹉学舌</div><div class="sub cap">tsparrot's blog</div></a></div>
+<nav class="menu dis-select"><a class="nav-item active" href="/">博客</a><a class="nav-item" href="/about/">关于</a></nav></header>
+
+<div class="widgets">
+
+<div class="widget-wrap single" id="toc"><div class="widget-header cap dis-select"><span class="name">本文目录</span></div><div class="widget-body fs14"><div class="doc-tree active"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#JVM%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E6%9C%BA%E5%88%B6"><span class="toc-text">JVM垃圾回收机制</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#JVM%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B"><span class="toc-text">JVM内存模型</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9E%83%E5%9C%BE%E7%9A%84%E5%88%A4%E5%AE%9A%EF%BC%9A%E5%AF%B9%E8%B1%A1%E5%AD%98%E6%B4%BB%E7%AE%97%E6%B3%95"><span class="toc-text">垃圾的判定：对象存活算法</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%BC%95%E7%94%A8%E8%AE%A1%E6%95%B0%E7%AE%97%E6%B3%95"><span class="toc-text">引用计数算法</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%8F%AF%E8%BE%BE%E6%80%A7%E5%88%86%E6%9E%90%E7%AE%97%E6%B3%95"><span class="toc-text">可达性分析算法</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Java%E7%9A%84%E5%9B%9B%E7%A7%8D%E5%BC%95%E7%94%A8%E7%B1%BB%E5%9E%8B"><span class="toc-text">Java的四种引用类型</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E8%BF%87%E7%A8%8B"><span class="toc-text">垃圾回收过程</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E7%AE%97%E6%B3%95%E7%9A%84%E6%80%9D%E8%B7%AF"><span class="toc-text">垃圾回收算法的思路</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%88%86%E4%BB%A3%E6%94%B6%E9%9B%86%E7%AE%97%E6%B3%95"><span class="toc-text">分代收集算法</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Android%E5%86%85%E5%AD%98%E4%BC%98%E5%8C%96%E6%80%9D%E8%B7%AF%EF%BC%9A%E5%A6%82%E4%BD%95%E9%81%BF%E5%85%8D%E5%86%85%E5%AD%98%E6%B3%84%E9%9C%B2%E5%8F%8AOOM"><span class="toc-text">Android内存优化思路：如何避免内存泄露及OOM</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83"><span class="toc-text">参考</span></a></li></ol></div></div></div>
+
+
+</div>
+
+
+    </aside>
+    <div class='l_main'>
+      
+
+      
+
+<div class="bread-nav fs12"><div id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a><span class="sep"></span><a class="cap breadcrumb" href="/">文章</a></div><div id="post-meta">发布于&nbsp;<time datetime="2021-05-22T16:00:00.000Z">2021-05-23</time></div></div>
+
+<article class='content md post'>
+<h1 class="article-title"><span>从JVM垃圾回收机制看Android内存泄露</span></h1>
+<h2 id="JVM垃圾回收机制"><a href="#JVM垃圾回收机制" class="headerlink" title="JVM垃圾回收机制"></a>JVM垃圾回收机制</h2><h3 id="JVM内存模型"><a href="#JVM内存模型" class="headerlink" title="JVM内存模型"></a>JVM内存模型</h3><p>了解JVM垃圾回收机制之前，有必要先介绍JVM的内存模型机制，以阐明我们常说的JVM垃圾回收机制是从何处回收垃圾。</p>
+<p><em>注：这里提到的JVM内存模型和java内存模型并不是一回事，注意区分</em></p>
+<p>在Java中，我们的源代码编译后会生成以.class为后缀的字节码（在Android中会通过dx工具进一步翻译、重构、解释、压缩成Android虚拟机支持的Dex文件）</p>
+<p>Class字节码经过类加载系统的处理，会把执行程序需要的相关信息存储到内存中的如下区域：</p>
+<p>PC寄存器：<strong>线程私有</strong>，存储每个线程下一步将执行的JVM指令</p>
+<p>JVM栈：<strong>线程私有</strong>，存放局部变量，操作数栈，返回结果等。非基本类型的对象，在JVM栈中只存储对象的引用（即一个指向堆上的地址），而对象数据存储在堆上。</p>
+<p>本地方法栈：线程私有，native方法的调用栈</p>
+<p>方法区：<strong>线程共享</strong>，其中包含一个运行时常量池。存储已被虚拟机加载的类信息、常量、静态变量、即时编译器（jit）编译后的代码数据。</p>
+<p>堆：<strong>线程共享</strong>，用来存储对象实例的区域。</p>
+<p>堆区分为新生代（包含Eden space和survivor space）、老年代。</p>
+<p>新生代：</p>
+<ul>
+<li>Eden区：对象被创建的时候首先放在Eden区，如果Eden区满就会触发一次Minor GC（定义见下文），之后没有被回收的对象会从Eden区转移到Survivor区。</li>
+<li>Survivor区：Survivor区分为To Survivor、 From Survivor，触发GC时，不能被回收的对象被放入到To Survivor，同时Eden区域的内存会在垃圾回收的过程中全部释放，之后互换To Survivor和From Suvivor的标签，保证To Suvivor区始终为空。</li>
+</ul>
+<p>在Minor GC中存活下来的对象age会加1，当age超过一定阈值（即在多次GC中存活下来，已足够old）的对象会被转移到老年代。</p>
+<p>老年代：用于存放新生代中多次存活足够old的对象、也有可能是新生代分配不了内存的大对象，当老年代被放满的之后，<a target="_blank" rel="noopener" href="https://so.csdn.net/so/search?q=%E8%99%9A%E6%8B%9F%E6%9C%BA&spm=1001.2101.3001.7020">虚拟机</a>会进行垃圾回收，称之为Major GC。由于Major GC需对整个堆进行扫描和回收，因此又称为Full GC。此外，在发生Minor GC之前，虚拟机会先检查老年代最大可用的连续空间是否大于新生代所有对象的总空间。如果大于则进行Minor GC，如果小于则看HandlePromotionFailure设置是否允许担保失败（不允许则直接Full GC）。如果允许，那么会继续检查老年代最大可用的连续空间是否大于历次晋升到老年代对象的平均大小，如果大于则尝试Minor GC（如果尝试失败也会触发Full GC），如果小于则进行Full GC。</p>
+<p><strong>堆区大小&#x3D;新生代大小+老年代大小，其中新生代：老年代为1：2，Eden：From Survivor：To Survivor为8：1：1。</strong></p>
+<p>垃圾回收是<strong>回收程序执行过程中不需要的对象相关的内存，因此主要发生在堆区（对象实例）和JVM栈区（对象引用），少部分发生在方法区。</strong></p>
+<h3 id="垃圾的判定：对象存活算法"><a href="#垃圾的判定：对象存活算法" class="headerlink" title="垃圾的判定：对象存活算法"></a>垃圾的判定：对象存活算法</h3><p>了解完从何处回收垃圾之后，再来讲讲什么样的对象会被判定为回收目标，常见的对象存活算法有：</p>
+<h4 id="引用计数算法"><a href="#引用计数算法" class="headerlink" title="引用计数算法"></a>引用计数算法</h4><p>给对象中添加一个引用计数器，每当有一个地方引用它时，计数器+1，当引用失效，计数器-1.任何时刻计数器为0的对象就是不可能再被使用的。</p>
+<ul>
+<li>优点：实现简单，判定效率高效，被actionscript3和python中广泛应用。</li>
+<li>缺点：无法解决对象之间的相互引用问题。java没有采纳</li>
+</ul>
+<h4 id="可达性分析算法"><a href="#可达性分析算法" class="headerlink" title="可达性分析算法"></a>可达性分析算法</h4><p>通过一系列称为“GC Roots”的对象作为起始点，从这些节点开始向下搜索，搜索所走过的路径称为引用链，当一个对象到GCRoots没有任何引用链相连的时候，则证明此对象是不可用的。</p>
+<p>比如如下，右侧的对象是到GCRoot时不可达的，可以判定为可回收对象。</p>
+<ul>
+<li>虚拟机栈中引用的对象。</li>
+<li>方法区中静态属性引用的对象。</li>
+<li>方法区中常量引用的对象。</li>
+<li>本地方法中JNI引用的对象。</li>
+</ul>
+<p>对象可达性分析之后，发现没有与GCRoots相连接，此时会被第一次标记并筛选</p>
+<h4 id="Java的四种引用类型"><a href="#Java的四种引用类型" class="headerlink" title="Java的四种引用类型"></a>Java的四种引用类型</h4><p>1.强引用：程序中普遍存在的一种引用 Object o &#x3D; new Object();垃圾收集器永远不会回收被强引用的对象。</p>
+<p>2.软引用：如下所示，当我们存在有用但不是必需的对象时，例如缓存，就可以使用软引用。</p>
+<p>只要内存空间足够，软引用对象就不会被回收，将要发生内存溢出异常时，会将软引用的对象回收。</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SoftReference&lt;String&gt; sr = new SoftReference&lt;String&gt;(new String(&quot;hello&quot;));</span><br></pre></td></tr></table></figure>
+
+<p>3.弱引用：弱引用也是用来描述非必需对象的，当JVM进行垃圾回收时，无论内存是否充足，都会回收被弱引用关联的对象。</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">WeakReference&lt;String&gt; sr = new WeakReference&lt;String&gt;(new String(&quot;hello&quot;));</span><br></pre></td></tr></table></figure>
+
+<p>4.虚引用（了解必要性低）：虚引用和前面的软引用、弱引用不同，它并不影响对象的生命周期。在java中用java.lang.ref.PhantomReference类表示。如果一个对象与虚引用关联，则跟没有引用与之关联一样，在任何时候都可能被垃圾回收器回收。</p>
+<p>虚引用必须和引用队列关联使用，当垃圾回收器准备回收一个对象时，如果发现它还有虚引用，就会把这个虚引用加入到与之关联的引用队列中。程序可以通过判断引用队列中是否已经加入了虚引用，来了解被引用的对象是否将要被垃圾回收。如果程序发现某个虚引用已经被加入到引用队列，那么就可以在所引用的对象的内存被回收之前采取必要的行动。</p>
+<h3 id="垃圾回收过程"><a href="#垃圾回收过程" class="headerlink" title="垃圾回收过程"></a>垃圾回收过程</h3><h4 id="垃圾回收算法的思路"><a href="#垃圾回收算法的思路" class="headerlink" title="垃圾回收算法的思路"></a>垃圾回收算法的思路</h4><p>了解存活性算法和Java引用类型的基础上，再来讨论一下垃圾回收算法的几种思路</p>
+<ul>
+<li>标记-清除算法：先标记出需要被回收的对象，然后全部清除，这种算法有两个严重的问题， <em><strong>一是标记清楚的效率不高，二是产生内存碎片</strong></em></li>
+<li><em>标记-复制算法</em> :将内存划分为相等的两块区域A和B，一次只用其中一块A，当需要垃圾回收时，将A中所有存活的对象复制到B，然后清楚A，使用B。就这样周而复始。但是也有一个明显的问题：<em><strong>可使用的内存大小只有一半。</strong></em></li>
+<li>标记-整理算法 ：先标记，然后让所有存活对象向另一端移动，然后直接清理端边界以外的内存，这样可以<strong>解决内存碎片问题</strong></li>
+</ul>
+<h3 id="分代收集算法"><a href="#分代收集算法" class="headerlink" title="分代收集算法"></a>分代收集算法</h3><p>Java中真正采用的分代收集算法是标记复制算法和标记整理算法的结合：</p>
+<p><strong>新生代：</strong></p>
+<p>所有新对象创建发生在Eden区，Eden区满后触发新生代上的minor GC，将Eden区和非空闲Survivor区存活对象复制到另一个空闲的Survivor区中。</p>
+<p>永远保证一个Survivor是空的，新生代minor GC就是在两个Survivor区之间相互复制存活对象，直到Survivor区满为止。</p>
+<p>由于新生代大多数对象是 <em><strong>“朝生夕死”</strong></em> 的所以，对于新生代采用有两个很小的Survivor区、一个大的Eden区，使用复制算法的原理进行回收：一次使用一个Survivor区1和Eden区，生还的对象移入另一个保留区2，然后清空所有，周而复始。</p>
+<p><strong>老年代</strong>：</p>
+<p>Eden区满后触发minor GC将存活对象复制到Survivor区，Survivor区满后触发minor GC会有部分足够old的存活对象复制到老年代。</p>
+<p>经过新生代的两个Survivor之间多次复制，仍然存活下来的对象就是年龄相对比较老的，就可以放入到老年代了，随着时间推移，如果老年代也满了，将触发Full GC，针对整个堆（包括新生代、老年代）进行垃圾回收。</p>
+<p>老年代大多数对象会长期存活，不适合复制算法，所以使用标记-整理算法。</p>
+<h2 id="Android内存优化思路：如何避免内存泄露及OOM"><a href="#Android内存优化思路：如何避免内存泄露及OOM" class="headerlink" title="Android内存优化思路：如何避免内存泄露及OOM"></a>Android内存优化思路：如何避免内存泄露及OOM</h2><ul>
+<li><strong>不再使用对象时，将引用置空，那么GC顺着栈或者静态存储区中的引用就找不到堆中对应的对象，那么这个对应的对象就会被回收</strong>。<ul>
+<li>Android中Activity，context，bitmap等占据较大的内存空间对象，在不用的时候，一定保证当前对象的<strong><strong>直接引用和间接引用全部被置为空</strong></strong>内存才能被释放。</li>
+</ul>
+</li>
+<li>尽量不要在生命周期较长（程序执行期间可能都不会被收回）的对象实例中引用其他的不必要的占内存较大的对象实例</li>
+<li>内存优化一个最根本的准则， <strong>就是努力使你的程序适配Java的GC机制</strong> 。</li>
+</ul>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a target="_blank" rel="noopener" href="https://juejin.cn/post/6844903502779514887">JVM内存优化-图解垃圾回收</a></p>
+<p><a target="_blank" rel="noopener" href="https://book.douban.com/subject/34907497/">《深入理解JAVA虚拟机》-周志明</a></p>
+
+
+<div class="article-footer reveal fs14"><section id="license"><div class="header"><span>许可协议</span></div><div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
+</div></section></div>
+
+</article>
+
+<div class="related-wrap reveal" id="read-next"><section class="header cap theme"><span>接下来阅读</span></section><section class="body fs14"><a id="next" href="/2021/05/20/Android%20Studio%20Sync%20Failed%E8%AE%B0%E5%BD%95/">Android Studio Sync Failed记录<span class="note">较早</span></a><div class="line"></div><a id="prev" href="/2021/05/30/Android%20SDK%20Version%E5%B0%8F%E7%BB%93/">Android SDK Version小结<span class="note">较新</span></a></section></div>
+
+
+
+
+
+
+  <div class='related-wrap md reveal' id="comments">
+    <div class='cmt-title cap theme'>
+      快来参与讨论吧
+    </div>
+    <div class='cmt-body beaudar'>
+      
+
+<svg class="loading" style="vertical-align: middle;fill: currentColor;overflow: hidden;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2709"><path d="M832 512c0-176-144-320-320-320V128c211.2 0 384 172.8 384 384h-64zM192 512c0 176 144 320 320 320v64C300.8 896 128 723.2 128 512h64z" p-id="2710"></path></svg>
+
+<div id="beaudar" repo="tsparrot/cage-comments" issue-term="pathname" theme="preferred-color-scheme" input-position="top" comment-order="desc" loading="false" branch="main"></div>
+
+    </div>
+  </div>
+
+
+
+      
+<footer class="page-footer reveal fs12"><hr><div class="text"><p>本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
+<p>本站由 <a href="https://tsparrot.github.io/">@tsparrot</a> 创建，使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.7.0" title="v1.7.0">Stellar</a> 作为主题。</p>
+</div></footer>
+
+      <div class='float-panel mobile-only blur' style='display:none'>
+  <button type='button' class='sidebar-toggle mobile' onclick='sidebar.toggle()'>
+    <svg class="icon" style="width: 1em; height: 1em;vertical-align: middle;fill: currentColor;overflow: hidden;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="15301"><path d="M566.407 808.3c26.9-0.1 49.3-20.8 51.6-47.6-1.9-27.7-23.9-49.7-51.6-51.6h-412.6c-28.2-1.4-52.6 19.5-55.5 47.6 2.3 26.8 24.6 47.5 51.6 47.6h416.5v4z m309.3-249.9c26.9-0.1 49.3-20.8 51.6-47.6-2.2-26.8-24.6-47.5-51.6-47.6h-721.9c-27.7-2.8-52.5 17.4-55.3 45.1-0.1 0.8-0.1 1.7-0.2 2.5 0.9 27.2 23.6 48.5 50.7 47.6H875.707z m-103.1-245.9c26.9-0.1 49.3-20.8 51.6-47.6-0.4-28.3-23.2-51.1-51.5-51.6h-618.9c-29.5-1.1-54.3 21.9-55.5 51.4v0.2c1.4 27.8 25.2 49.2 53 47.8 0.8 0 1.7-0.1 2.5-0.2h618.8z" p-id="15302"></path><path d="M566.407 808.3c26.9-0.1 49.3-20.8 51.6-47.6-1.9-27.7-23.9-49.7-51.6-51.6h-412.6c-28.2-1.4-52.6 19.5-55.5 47.6 1.9 27.7 23.9 49.7 51.6 51.6h416.5z m309.3-249.9c26.9-0.1 49.3-20.8 51.6-47.6-2.2-26.8-24.6-47.5-51.6-47.6h-721.9c-27.7-2.8-52.5 17.4-55.3 45.1-0.1 0.8-0.1 1.7-0.2 2.5 0.9 27.2 23.6 48.5 50.7 47.6H875.707z m-103.1-245.9c26.9-0.1 49.3-20.8 51.6-47.6-0.4-28.3-23.2-51.1-51.5-51.6h-618.9c-29.5-1.1-54.3 21.9-55.5 51.4v0.2c1.4 27.8 25.2 49.2 53 47.8 0.8 0 1.7-0.1 2.5-0.2h618.8z" p-id="15303"></path></svg>
+  </button>
+</div>
+
+    </div>
+  </div>
+  <div class='scripts'>
+    <script type="text/javascript">
+  stellar = {
+    // 懒加载 css https://github.com/filamentgroup/loadCSS
+    loadCSS: (href, before, media, attributes) => {
+      var doc = window.document;
+      var ss = doc.createElement("link");
+      var ref;
+      if (before) {
+        ref = before;
+      } else {
+        var refs = (doc.body || doc.getElementsByTagName("head")[0]).childNodes;
+        ref = refs[refs.length - 1];
+      }
+      var sheets = doc.styleSheets;
+      if (attributes) {
+        for (var attributeName in attributes) {
+          if (attributes.hasOwnProperty(attributeName)) {
+            ss.setAttribute(attributeName, attributes[attributeName]);
+          }
+        }
+      }
+      ss.rel = "stylesheet";
+      ss.href = href;
+      ss.media = "only x";
+      function ready(cb) {
+        if (doc.body) {
+          return cb();
+        }
+        setTimeout(function () {
+          ready(cb);
+        });
+      }
+      ready(function () {
+        ref.parentNode.insertBefore(ss, before ? ref : ref.nextSibling);
+      });
+      var onloadcssdefined = function (cb) {
+        var resolvedHref = ss.href;
+        var i = sheets.length;
+        while (i--) {
+          if (sheets[i].href === resolvedHref) {
+            return cb();
+          }
+        }
+        setTimeout(function () {
+          onloadcssdefined(cb);
+        });
+      };
+      function loadCB() {
+        if (ss.addEventListener) {
+          ss.removeEventListener("load", loadCB);
+        }
+        ss.media = media || "all";
+      }
+      if (ss.addEventListener) {
+        ss.addEventListener("load", loadCB);
+      }
+      ss.onloadcssdefined = onloadcssdefined;
+      onloadcssdefined(loadCB);
+      return ss;
+    },
+
+    // 从 butterfly 和 volantis 获得灵感
+    loadScript: (src, opt) => new Promise((resolve, reject) => {
+      var script = document.createElement('script');
+      script.src = src;
+      if (opt) {
+        for (let key of Object.keys(opt)) {
+          script[key] = opt[key]
+        }
+      } else {
+        // 默认异步，如果需要同步，第二个参数传入 {} 即可
+        script.async = true
+      }
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    }),
+
+    // https://github.com/jerryc127/hexo-theme-butterfly
+    jQuery: (fn) => {
+      if (typeof jQuery === 'undefined') {
+        stellar.loadScript(stellar.plugins.jQuery).then(fn)
+      } else {
+        fn()
+      }
+    }
+  };
+  stellar.github = 'https://github.com/xaoxuu/hexo-theme-stellar/tree/1.7.0';
+  stellar.config = {
+    date_suffix: {
+      just: '刚刚',
+      min: '分钟前',
+      hour: '小时前',
+      day: '天前',
+      month: '个月前',
+    },
+  };
+
+  // required plugins (only load if needs)
+  stellar.plugins = {
+    jQuery: 'https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js',
+    sitesjs: '/js/plugins/sites.js',
+    friendsjs: '/js/plugins/friends.js',
+  };
+
+  // optional plugins
+  if ('true' == 'true') {
+    stellar.plugins.lazyload = Object.assign({"enable":true,"js":"https://cdn.jsdelivr.net/npm/vanilla-lazyload@17.3.1/dist/lazyload.min.js","transition":"blur"});
+  }
+  if ('true' == 'true') {
+    stellar.plugins.swiper = Object.assign({"enable":true,"css":"https://unpkg.com/swiper@6/swiper-bundle.min.css","js":"https://unpkg.com/swiper@6/swiper-bundle.min.js"});
+  }
+  if ('' == 'true') {
+    stellar.plugins.scrollreveal = Object.assign({"enable":null,"js":"https://cdn.jsdelivr.net/npm/scrollreveal@4.0.9/dist/scrollreveal.min.js","distance":"8px","duration":500,"interval":100,"scale":1});
+  }
+  if ('true' == 'true') {
+    stellar.plugins.preload = Object.assign({"enable":true,"service":"flying_pages","instant_page":"https://cdn.jsdelivr.net/gh/volantis-x/cdn-volantis@4.1.2/js/instant_page.js","flying_pages":"https://cdn.jsdelivr.net/gh/gijo-varghese/flying-pages@2.1.2/flying-pages.min.js"});
+  }
+  if ('true' == 'true') {
+    stellar.plugins.fancybox = Object.assign({"enable":true,"js":"https://cdn.jsdelivr.net/npm/@fancyapps/ui@4.0/dist/fancybox.umd.js","css":"https://cdn.jsdelivr.net/npm/@fancyapps/ui@4.0/dist/fancybox.css","selector":".swiper-slide img"});
+  }
+  if ('false' == 'true') {
+    stellar.plugins.heti = Object.assign({"enable":false,"css":"https://unpkg.com/heti/umd/heti.min.css","js":"https://unpkg.com/heti/umd/heti-addon.min.js"});
+  }
+</script>
+
+<!-- required -->
+
+  
+<script src="/js/main.js" async></script>
+
+
+
+<!-- optional -->
+
+  <script>
+  function loadBeaudar() {
+    const els = document.querySelectorAll("#comments #beaudar");
+    if (els.length === 0) return;
+    els.forEach((el, i) => {
+      try {
+        el.innerHTML = '';
+      } catch (error) {
+        console.log(error);
+      }
+      var script = document.createElement('script');
+      script.src = 'https://beaudar.lipk.org/client.js';
+      script.async = true;
+      for (let key of Object.keys(el.attributes)) {
+        let attr = el.attributes[key];
+        if (['class', 'id'].includes(attr.name) === false) {
+          script.setAttribute(attr.name, attr.value);
+        }
+      }
+      el.appendChild(script);
+    });
+  }
+  window.addEventListener('DOMContentLoaded', (event) => {
+      loadBeaudar();
+  });
+</script>
+
+
+
+
+<!-- inject -->
+
+
+  </div>
+</body>
+</html>

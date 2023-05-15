@@ -1,4 +1,4 @@
-console.log('\n' + '%c Stellar v' + stellar.version + ' %c\n' + stellar.github + '\n', 'color:#e8fafe;background:#03c7fa;padding:8px;border-radius:4px', 'margin-top:8px');
+console.log('hexo-theme-stellar:\n' + stellar.github);
 // utils
 const util = {
 
@@ -92,16 +92,9 @@ const init = {
     stellar.jQuery(() => {
       const scrollOffset = 32;
       var segs = [];
-      $("article.md-text :header").each(function (idx, node) {
+      $("article.md :header").each(function (idx, node) {
         segs.push(node)
       });
-      // 定位到激活的目录树（不如pjax体验好）
-      // const widgets = document.querySelector('.widgets')
-      // const e1 = document.querySelector('.doc-tree-link.active')
-      // const offsetTop = e1.getBoundingClientRect().top - widgets.getBoundingClientRect().top - 100
-      // if (offsetTop > 0) {
-      //   widgets.scrollBy({top: offsetTop, behavior: 'smooth'})
-      // }
       // 滚动
       $(document, window).scroll(function (e) {
         var scrollTop = $(this).scrollTop();
@@ -118,24 +111,12 @@ const init = {
           }
         }
         if (topSeg) {
-          $("#data-toc a.toc-link").removeClass("active")
+          $("#toc a.toc-link").removeClass("active")
           var link = "#" + topSeg.attr("id")
           if (link != '#undefined') {
-            const highlightItem = $('#data-toc a.toc-link[href="' + encodeURI(link) + '"]')
-            if (highlightItem.length > 0) {
-              highlightItem.addClass("active")
-              const e0 = document.querySelector('.widgets')
-              const e1 = document.querySelector('#data-toc a.toc-link[href="' + encodeURI(link) + '"]')
-              const offsetBottom = e1.getBoundingClientRect().bottom - e0.getBoundingClientRect().bottom + 100
-              const offsetTop = e1.getBoundingClientRect().top - e0.getBoundingClientRect().top - 64
-              if (offsetTop < 0) {
-                e0.scrollBy(0, offsetTop)
-              } else if (offsetBottom > 0) {
-                e0.scrollBy(0, offsetBottom)
-              }
-            }
+            $('#toc a.toc-link[href="' + encodeURI(link) + '"]').addClass("active")
           } else {
-            $('#data-toc a.toc-link:first').addClass("active")
+            $('#toc a.toc-link:first').addClass("active")
           }
         }
       })
@@ -143,7 +124,7 @@ const init = {
   },
   sidebar: () => {
     stellar.jQuery(() => {
-      $("#data-toc a.toc-link").click(function (e) {
+      $("#toc a.toc-link").click(function (e) {
         l_body.classList.remove("sidebar");
       });
     })
@@ -163,7 +144,7 @@ const init = {
    */
   registerTabsTag: function () {
     // Binding `nav-tabs` & `tab-content` by real time permalink changing.
-    document.querySelectorAll('.tabs .nav-tabs .tab').forEach(element => {
+    document.querySelectorAll('.tabs ul.nav-tabs .tab').forEach(element => {
       element.addEventListener('click', event => {
         event.preventDefault();
         // Prevent selected tab to select again.
@@ -228,29 +209,25 @@ if (stellar.plugins.lazyload) {
     false
   );
   document.addEventListener('DOMContentLoaded', function () {
-    window.lazyLoadInstance?.update();
+    lazyLoadInstance.update();
   });
 }
 
-// stellar js
-if (stellar.plugins.stellar) {
-  for (let key of Object.keys(stellar.plugins.stellar)) {
-    let js = stellar.plugins.stellar[key];
-    if (key == 'linkcard') {
-      stellar.loadScript(js, { defer: true }).then(function () {
-        setCardLink(document.querySelectorAll('a.link-card[cardlink]'));
-      });
-    } else {
-      const els = document.getElementsByClassName('stellar-' + key + '-api');
-      if (els != undefined && els.length > 0) {
-        stellar.jQuery(() => {
-          stellar.loadScript(js, { defer: true });
-          if (key == 'timeline') {
-            stellar.loadScript(stellar.plugins.marked);
-          }
-        })
-      }
-    }
+// issuesjs
+if (stellar.plugins.sitesjs) {
+  const issues_api = document.getElementById('sites-api');
+  if (issues_api != undefined) {
+    stellar.jQuery(() => {
+      stellar.loadScript(stellar.plugins.sitesjs, { defer: true })
+    })
+  }
+}
+if (stellar.plugins.friendsjs) {
+  const issues_api = document.getElementById('friends-api');
+  if (issues_api != undefined) {
+    stellar.jQuery(() => {
+      stellar.loadScript(stellar.plugins.friendsjs, { defer: true })
+    })
   }
 }
 
@@ -260,12 +237,10 @@ if (stellar.plugins.swiper) {
   if (swiper_api != undefined) {
     stellar.loadCSS(stellar.plugins.swiper.css);
     stellar.loadScript(stellar.plugins.swiper.js, { defer: true }).then(function () {
-      const effect = swiper_api.getAttribute('effect') || '';
-      var swiper = new Swiper('.swiper#swiper-api', {
+      var swiper = new Swiper('.swiper-container', {
         slidesPerView: 'auto',
         spaceBetween: 8,
         centeredSlides: true,
-        effect: effect,
         loop: true,
         pagination: {
           el: '.swiper-pagination',
@@ -322,70 +297,12 @@ if (stellar.plugins.fancybox) {
   }
 }
 
-
-if (stellar.search.service) {
-  if (stellar.search.service == 'local_search') {
-    stellar.jQuery(() => {
-      stellar.loadScript('/js/search/local-search.js', { defer: true }).then(function () {
-        var $inputArea = $("input#search-input");
-        if ($inputArea.length == 0) {
-          return;
-        }
-        var $resultArea = document.querySelector("div#search-result");
-        $inputArea.focus(function() {
-          var path = stellar.search[stellar.search.service]?.path || '/search.json';
-          if (path.startsWith('/')) {
-            path = path.substring(1);
-          }
-          path = stellar.config.root + path;
-          const filter = $inputArea.attr('data-filter') || '';
-          searchFunc(path, filter, 'search-input', 'search-result');
-        });
-        $inputArea.keydown(function(e) {
-          if (e.which == 13) {
-            e.preventDefault();
-          }
-        });
-        var observer = new MutationObserver(function(mutationsList, observer) {
-          if (mutationsList.length == 1) {
-            if (mutationsList[0].addedNodes.length) {
-              $('.search-wrapper').removeClass('noresult');
-            } else if (mutationsList[0].removedNodes.length) {
-              $('.search-wrapper').addClass('noresult');
-            }
-          }
-        });
-        observer.observe($resultArea, { childList: true });
-      });
-    })
-  }
-}
-
-
 // heti
 if (stellar.plugins.heti) {
   stellar.loadCSS(stellar.plugins.heti.css);
   stellar.loadScript(stellar.plugins.heti.js, { defer: true }).then(function () {
-    const heti = new Heti('.heti');
-    
-    // Copied from heti.autoSpacing() without DOMContentLoaded.
-    // https://github.com/sivan/heti/blob/eadee6a3b748b3b7924a9e7d5b395d4bce479c9a/js/heti-addon.js
-    //
-    // We managed to minimize the code modification to ensure .autoSpacing()
-    // is synced with upstream; therefore, we use `.bind()` to emulate the 
-    // behavior of .autoSpacing() so we can even modify almost no code.
-    void (function () {
-      const $$rootList = document.querySelectorAll(this.rootSelector)
-
-      for (let $$root of $$rootList) {
-        this.spacingElement($$root)
-      }
-    }).bind(heti)();
-
+    const heti = new Heti('.heti p');
+    heti.autoSpacing();
     stellar.plugins.heti.enable = false;
   });
-}
-
-if (stellar.plugins.copycode) {
-  stellar.loadScript(stellar.plugins.copycode.js, { defer: true })
 }
