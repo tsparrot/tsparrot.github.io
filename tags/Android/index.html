@@ -67,7 +67,7 @@
 <div class="widget-wrap" id="markdown"><div class="widget-header cap dis-select"><span class="name">EL PSY CONGROO</span></div><div class="widget-body fs14"><p>Android开发与生活的点点滴滴</p>
 </div></div>
 
-<div class="widget-wrap" id="recent"><div class="widget-header cap dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><div class="more-item"><a class="title" href="/2021/05/30/Android%20SDK%20Version%E5%B0%8F%E7%BB%93/">Android SDK Version小结</a></div><div class="more-item"><a class="title" href="/2021/05/23/%E4%BB%8EJVM%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E6%9C%BA%E5%88%B6%E7%9C%8BAndroid%E5%86%85%E5%AD%98%E6%B3%84%E9%9C%B2/">从JVM垃圾回收机制看Android内存泄露</a></div><div class="more-item"><a class="title" href="/2021/05/20/Android%20Studio%20Sync%20Failed%E8%AE%B0%E5%BD%95/">Android Studio Sync Failed记录</a></div><div class="more-item"><a class="title" href="/2021/03/10/%E4%BB%8EPressableTextView%20click%20%E8%B8%A9%E5%9D%91%E7%9C%8B%E4%BA%8B%E4%BB%B6%E5%88%86%E5%8F%91/">从PressableTextView click 踩坑看事件分发</a></div><div class="more-item"><a class="title" href="/2021/01/25/%E4%B8%BB%E5%8A%A8%E6%80%9D%E8%80%83%EF%BC%8C%E6%8C%91%E6%88%98%E8%87%AA%E6%88%91%E2%80%94%E2%80%94%E5%AE%9E%E4%B9%A0%E6%80%BB%E7%BB%93/">主动思考，挑战自我——实习总结</a></div></div></div>
+<div class="widget-wrap" id="recent"><div class="widget-header cap dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><div class="more-item"><a class="title" href="/2021/06/15/Android%20%E6%9C%BA%E5%88%B6%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90(%E4%B8%80):%20%E4%BA%8B%E4%BB%B6%E5%88%86%E5%8F%91%E6%BA%90%E7%A0%81%E6%B5%85%E6%9E%90/">Android机制源码分析（一）：事件分发源码浅析</a></div><div class="more-item"><a class="title" href="/2021/05/30/Android%20SDK%20Version%E5%B0%8F%E7%BB%93/">Android SDK Version小结</a></div><div class="more-item"><a class="title" href="/2021/05/23/%E4%BB%8EJVM%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E6%9C%BA%E5%88%B6%E7%9C%8BAndroid%E5%86%85%E5%AD%98%E6%B3%84%E9%9C%B2/">从JVM垃圾回收机制看Android内存泄露</a></div><div class="more-item"><a class="title" href="/2021/05/20/Android%20Studio%20Sync%20Failed%E8%AE%B0%E5%BD%95/">Android Studio Sync Failed记录</a></div><div class="more-item"><a class="title" href="/2021/03/10/%E4%BB%8EPressableTextView%20click%20%E8%B8%A9%E5%9D%91%E7%9C%8B%E4%BA%8B%E4%BB%B6%E5%88%86%E5%8F%91/">从PressableTextView click 踩坑看事件分发</a></div></div></div>
 </div>
 
 
@@ -107,7 +107,12 @@
   </nav>
 </div>
 
-  <div class="post-list post"><a class="post-card post " href="/2021/05/30/Android%20SDK%20Version%E5%B0%8F%E7%BB%93/">
+  <div class="post-list post"><a class="post-card post " href="/2021/06/15/Android%20%E6%9C%BA%E5%88%B6%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90(%E4%B8%80):%20%E4%BA%8B%E4%BB%B6%E5%88%86%E5%8F%91%E6%BA%90%E7%A0%81%E6%B5%85%E6%9E%90/">
+<article class="md"><h2 class="post-title">Android机制源码分析（一）：事件分发源码浅析</h2><div class="excerpt"><p>碎碎念临近毕业，在成为一名全职android开发工程师之前，重新回顾那些重要的基础知识，这是第一篇
+关键流程Android 的事件分发过程主要涉及三个方法：dispatchTouchEvent(), onInterceptTouchEvent(), 和 onTouchEvent()。事件分发过程遵循以下顺序：
+
+dispatchTouchEvent() ：事件分发从根视图（通常是 Activ...</p></div><div class="meta cap"><span class="cap" id="post-meta">发布于&nbsp;<time datetime="2021-06-14T16:00:00.000Z">2021-06-15</time></span></div></article>
+</a><a class="post-card post " href="/2021/05/30/Android%20SDK%20Version%E5%B0%8F%E7%BB%93/">
 <article class="md"><h2 class="post-title">Android SDK Version小结</h2><div class="excerpt"><p>基本概念应用向前兼容性亦作向下兼容，应用向前兼容(forward， 代指未来)更新版本的系统，几乎所有对框架 API 的更改都是新增更改，所以使用 API 任何给定版本（其 API 级别所指定版本）开发的 Android 应用均向前兼容更新版本的 Android 平台以及更高 API 级别：即在为低版本API开发(target sdkversion 较低)的应用也可在高版本API 平台上正常...</p></div><div class="meta cap"><span class="cap" id="post-meta">发布于&nbsp;<time datetime="2021-05-29T16:00:00.000Z">2021-05-30</time></span></div></article>
 </a><a class="post-card post " href="/2021/05/23/%E4%BB%8EJVM%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E6%9C%BA%E5%88%B6%E7%9C%8BAndroid%E5%86%85%E5%AD%98%E6%B3%84%E9%9C%B2/">
 <article class="md"><h2 class="post-title">从JVM垃圾回收机制看Android内存泄露</h2><div class="excerpt"><p>JVM垃圾回收机制JVM内存模型了解JVM垃圾回收机制之前，有必要先介绍JVM的内存模型机制，以阐明我们常说的JVM垃圾回收机制是从何处回收垃圾。
