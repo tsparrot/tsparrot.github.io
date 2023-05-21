@@ -18,14 +18,14 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <meta name="theme-color" content="#f8f8f8">
-  <title>Android 机制源码分析（一）：事件分发源码浅析 - 鹦鹉学舌</title>
+  <title>Android机制源码分析（一）：事件分发源码浅析 - 鹦鹉学舌</title>
 
   
 
   
     <meta name="description" content="碎碎念临近毕业，在成为一名全职android开发工程师之前，重新回顾那些重要的基础知识，这是第一篇 关键流程Android 的事件分发过程主要涉及三个方法：dispatchTouchEvent(), onInterceptTouchEvent(), 和 onTouchEvent()。事件分发过程遵循以下顺序：  dispatchTouchEvent() ：事件分发从根视图（通常是 Activity">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Android 机制源码分析（一）：事件分发源码浅析">
+<meta property="og:title" content="Android机制源码分析（一）：事件分发源码浅析">
 <meta property="og:url" content="https://tsparrot.github.io/2021/06/15/Android%20%E6%9C%BA%E5%88%B6%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90(%E4%B8%80):%20%E4%BA%8B%E4%BB%B6%E5%88%86%E5%8F%91%E6%BA%90%E7%A0%81%E6%B5%85%E6%9E%90/index.html">
 <meta property="og:site_name" content="鹦鹉学舌">
 <meta property="og:description" content="碎碎念临近毕业，在成为一名全职android开发工程师之前，重新回顾那些重要的基础知识，这是第一篇 关键流程Android 的事件分发过程主要涉及三个方法：dispatchTouchEvent(), onInterceptTouchEvent(), 和 onTouchEvent()。事件分发过程遵循以下顺序：  dispatchTouchEvent() ：事件分发从根视图（通常是 Activity">
@@ -85,7 +85,7 @@
 <div class="bread-nav fs12"><div id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a><span class="sep"></span><a class="cap breadcrumb" href="/">文章</a></div><div id="post-meta">发布于&nbsp;<time datetime="2021-06-14T16:00:00.000Z">2021-06-15</time></div></div>
 
 <article class='content md post'>
-<h1 class="article-title"><span>Android 机制源码分析（一）：事件分发源码浅析</span></h1>
+<h1 class="article-title"><span>Android机制源码分析（一）：事件分发源码浅析</span></h1>
 <h2 id="碎碎念"><a href="#碎碎念" class="headerlink" title="碎碎念"></a>碎碎念</h2><p>临近毕业，在成为一名全职android开发工程师之前，重新回顾那些重要的基础知识，这是第一篇</p>
 <h2 id="关键流程"><a href="#关键流程" class="headerlink" title="关键流程"></a>关键流程</h2><p>Android 的事件分发过程主要涉及三个方法：<code>dispatchTouchEvent()</code>, <code>onInterceptTouchEvent()</code>, 和 <code>onTouchEvent()</code>。事件分发过程遵循以下顺序：</p>
 <ol>
