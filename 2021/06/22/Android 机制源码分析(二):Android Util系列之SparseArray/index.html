@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang='zh-CN'>
+
+<head>
+  <meta name="generator" content="Hexo 6.3.0">
+  <meta charset="utf-8">
+  
+
+  <meta http-equiv='x-dns-prefetch-control' content='on' />
+  <link rel='dns-prefetch' href='https://cdn.jsdelivr.net'>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel='dns-prefetch' href='//unpkg.com'>
+
+  <meta name="renderer" content="webkit">
+  <meta name="force-rendering" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  <meta name="HandheldFriendly" content="True" >
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="theme-color" content="#f8f8f8">
+  <title>Android机制源码分析（二）：Android Util系列之SparseArray - 鹦鹉学舌</title>
+
+  
+
+  
+    <meta name="description" content="碎碎念临近毕业，在成为一名全职android开发工程师之前，重新回顾那些重要的基础知识，这是第二篇 稀疏数组为了了解SparseArray和ArrayList的区别，需要了解一些前置知识： 稀疏数组（Sparse Array）是指数组中大部分元素为默认值（通常为0或者null）的数组。与稠密数组（Dense Array）相比，稀疏数组只存储非默认值的元素及其位置信息，从而减少了存储空间的占用。 在">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android机制源码分析（二）：Android Util系列之SparseArray">
+<meta property="og:url" content="https://tsparrot.github.io/2021/06/22/Android%20%E6%9C%BA%E5%88%B6%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90(%E4%BA%8C):Android%20Util%E7%B3%BB%E5%88%97%E4%B9%8BSparseArray/index.html">
+<meta property="og:site_name" content="鹦鹉学舌">
+<meta property="og:description" content="碎碎念临近毕业，在成为一名全职android开发工程师之前，重新回顾那些重要的基础知识，这是第二篇 稀疏数组为了了解SparseArray和ArrayList的区别，需要了解一些前置知识： 稀疏数组（Sparse Array）是指数组中大部分元素为默认值（通常为0或者null）的数组。与稠密数组（Dense Array）相比，稀疏数组只存储非默认值的元素及其位置信息，从而减少了存储空间的占用。 在">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2021-06-21T16:00:00.000Z">
+<meta property="article:modified_time" content="2021-06-21T16:00:00.000Z">
+<meta property="article:author" content="tsparrot">
+<meta property="article:tag" content="Android">
+<meta name="twitter:card" content="summary">
+  
+  
+
+  <!-- feed -->
+  
+
+  
+    
+<link rel="stylesheet" href="/css/main.css">
+
+  
+
+  
+
+  
+</head>
+
+<body>
+  
+
+
+
+
+  <div class='l_body' id='start'>
+    <aside class='l_left' layout='post'>
+    
+
+
+<header class="header">
+
+<div class="logo-wrap"><a class="title" href="/"><div class="main">鹦鹉学舌</div><div class="sub cap">tsparrot's blog</div></a></div>
+<nav class="menu dis-select"><a class="nav-item active" href="/">博客</a><a class="nav-item" href="/about/">关于</a></nav></header>
+
+<div class="widgets">
+
+<div class="widget-wrap single" id="toc"><div class="widget-header cap dis-select"><span class="name">本文目录</span></div><div class="widget-body fs14"><div class="doc-tree active"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A2%8E%E7%A2%8E%E5%BF%B5"><span class="toc-text">碎碎念</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A8%80%E7%96%8F%E6%95%B0%E7%BB%84"><span class="toc-text">稀疏数组</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90"><span class="toc-text">源码分析</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B0%8F%E7%BB%93"><span class="toc-text">小结</span></a></li></ol></div></div></div>
+
+
+</div>
+
+
+    </aside>
+    <div class='l_main'>
+      
+
+      
+
+<div class="bread-nav fs12"><div id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a><span class="sep"></span><a class="cap breadcrumb" href="/">文章</a></div><div id="post-meta">发布于&nbsp;<time datetime="2021-06-21T16:00:00.000Z">2021-06-22</time></div></div>
+
+<article class='content md post'>
+<h1 class="article-title"><span>Android机制源码分析（二）：Android Util系列之SparseArray</span></h1>
+<h2 id="碎碎念"><a href="#碎碎念" class="headerlink" title="碎碎念"></a>碎碎念</h2><p>临近毕业，在成为一名全职android开发工程师之前，重新回顾那些重要的基础知识，这是第二篇</p>
+<h2 id="稀疏数组"><a href="#稀疏数组" class="headerlink" title="稀疏数组"></a>稀疏数组</h2><p>为了了解SparseArray和ArrayList的区别，需要了解一些前置知识：</p>
+<p>稀疏数组（Sparse Array）是指数组中大部分元素为默认值（通常为0或者null）的数组。与稠密数组（Dense Array）相比，稀疏数组只存储非默认值的元素及其位置信息，从而减少了存储空间的占用。</p>
+<p>在许多应用场景中，数组的元素往往具有一定的规律性，而且默认值占据了大部分的数组空间。例如，图像处理中的像素矩阵、稀疏矩阵的表示等都可以使用稀疏数组来减少存储开销。</p>
+<p>稀疏数组通常采用一种压缩的方式进行存储，以便有效地表示数组中的非默认值元素。常用的稀疏数组存储格式包括：</p>
+<ol>
+<li>哈希表（Hash Table）：使用哈希表来存储非默认值元素的索引和值。通过哈希函数可以将索引映射到哈希表的位置，从而快速地进行查找和插入操作。</li>
+<li>链表（Linked List）：使用链表来存储非默认值元素及其位置信息。每个节点包含元素值、索引和指向下一个节点的指针，通过遍历链表可以获取稀疏数组中的非默认值元素。</li>
+</ol>
+<p>这些存储格式根据具体的应用场景和操作需求选择不同的方式，以便在稀疏数组的表示和操作中提高效率。</p>
+<p>通过使用稀疏数组，可以在处理大规模数组时减少内存占用，提高存储和计算效率。但需要注意的是，稀疏数组在某些情况下可能会增加一些操作的复杂度，例如插入、删除元素等操作可能需要重新调整稀疏数组的结构。因此，在选择使用稀疏数组时需要综合考虑数据规模、访问模式和操作需求等因素。</p>
+<h2 id="源码分析"><a href="#源码分析" class="headerlink" title="源码分析"></a>源码分析</h2><p>直接上源码分析，为了便于理解，我将部分注释简单翻译成了中文，比较粗糙，还请见谅</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">package</span> android.util;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> android.compat.annotation.UnsupportedAppUsage;</span><br><span class="line"><span class="keyword">import</span> com.android.internal.util.ArrayUtils;</span><br><span class="line"><span class="keyword">import</span> com.android.internal.util.GrowingArrayUtils;</span><br><span class="line"><span class="keyword">import</span> libcore.util.EmptyArray;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.util.Objects;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * &lt;code&gt;SparseArray&lt;/code&gt; 将整数映射到对象上，与普通的对象数组不同的是，它的索引可以包含空洞。</span></span><br><span class="line"><span class="comment"> * &lt;code&gt;SparseArray&lt;/code&gt; 旨在比</span></span><br><span class="line"><span class="comment"> * &lt;a href=&quot;/reference/java/util/HashMap&quot;&gt;&lt;code&gt;HashMap&lt;/code&gt;&lt;/a&gt; 更节省内存，</span></span><br><span class="line"><span class="comment"> * 因为它避免了键的自动装箱，并且其数据结构不依赖于每个映射的额外条目对象。</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * &lt;p&gt;请注意，该容器将映射保留在数组数据结构中，使用二分搜索来查找键。该实现不适用于</span></span><br><span class="line"><span class="comment"> * 可能包含大量项的数据结构。它通常比</span></span><br><span class="line"><span class="comment"> * &lt;code&gt;HashMap&lt;/code&gt; 慢，因为查找需要二分搜索，添加和删除需要在数组中插入和删除条目。</span></span><br><span class="line"><span class="comment"> * 对于容纳数百个项的容器，性能差异小于 50%。&lt;/p&gt;</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * &lt;p&gt;为了提高性能，该容器在删除键时包含了一种优化方法：它不会立即压缩其数组，</span></span><br><span class="line"><span class="comment"> * 而是将已删除的条目标记为已删除。然后可以重新使用该条目用于相同的键，或在稍后的单个垃圾回收中压缩它。</span></span><br><span class="line"><span class="comment"> * 必须在数组需要增长时或检索映射大小或条目值时执行此垃圾回收。&lt;/p&gt;</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * &lt;p&gt;可以使用 &#123;<span class="doctag">@link</span> #keyAt(int)&#125; 和 &#123;<span class="doctag">@link</span> #valueAt(int)&#125; 遍历此容器中的项。</span></span><br><span class="line"><span class="comment"> * 使用升序的索引值使用 &lt;code&gt;keyAt&lt;/code&gt; 和 &lt;code&gt;valueAt&lt;/code&gt; 方法，</span></span><br><span class="line"><span class="comment"> * 或者使用降序的索引值使用 &lt;code&gt;keyAt&lt;/code&gt; 和 &lt;code&gt;valueAt&lt;/code&gt; 方法，</span></span><br><span class="line"><span class="comment"> * 或者使用 &lt;code&gt;size()&lt;/code&gt; 和 &lt;code&gt;get(int)&lt;/code&gt; 方法以任意顺序遍历。&lt;/p&gt;</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> &lt;E&gt; 所保存对象的类型</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">SparseArray</span>&lt;E&gt; <span class="keyword">implements</span> <span class="title class_">Cloneable</span> &#123;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 默认初始容量。</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">int</span> <span class="variable">DEFAULT_INITIAL_CAPACITY</span> <span class="operator">=</span> <span class="number">10</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 表示已删除条目的标记对象。</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">Object</span> <span class="variable">DELETED</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Object</span>();</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 用于存储键的数组。</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">private</span> <span class="type">int</span>[] mKeys;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 用于存储值的数组。</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">private</span> Object[] mValues;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 有效映射的数量。</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">private</span> <span class="type">int</span> mSize;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 标记是否已删除条目以便在下次垃圾回收时进行压缩。</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">private</span> <span class="type">boolean</span> mGarbage;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 创建一个新的 &lt;code&gt;SparseArray&lt;/code&gt; 对象，默认初始容量为 &#123;<span class="doctag">@link</span> #DEFAULT_INITIAL_CAPACITY&#125;。</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">SparseArray</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="built_in">this</span>(DEFAULT_INITIAL_CAPACITY);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 创建一个新的 &lt;code&gt;SparseArray&lt;/code&gt; 对象，指定初始容量。</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> initialCapacity 初始容量</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">SparseArray</span><span class="params">(<span class="type">int</span> initialCapacity)</span> &#123;</span><br><span class="line">        mGarbage = <span class="literal">false</span>;</span><br><span class="line">        <span class="keyword">if</span> (initialCapacity == <span class="number">0</span>) &#123;</span><br><span class="line">            mKeys = EmptyArray.INT;</span><br><span class="line">            mValues = EmptyArray.OBJECT;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            mValues = ArrayUtils.newUnpaddedObjectArray(initialCapacity);</span><br><span class="line">            mKeys = <span class="keyword">new</span> <span class="title class_">int</span>[mValues.length];</span><br><span class="line">        &#125;</span><br><span class="line">        mSize = <span class="number">0</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 复制一个 &lt;code&gt;SparseArray&lt;/code&gt; 对象。</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> 该对象的副本</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> SparseArray&lt;E&gt; <span class="title function_">clone</span><span class="params">()</span> &#123;</span><br><span class="line">        SparseArray&lt;E&gt; clone = <span class="literal">null</span>;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            clone = (SparseArray&lt;E&gt;) <span class="built_in">super</span>.clone();</span><br><span class="line">            clone.mKeys = mKeys.clone();</span><br><span class="line">            clone.mValues = mValues.clone();</span><br><span class="line">        &#125; <span class="keyword">catch</span> (CloneNotSupportedException e) &#123;</span><br><span class="line">            <span class="comment">// 不应该发生，因为我们是可克隆的</span></span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> clone;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 获取有效映射的数量。</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> 映射的数量</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> <span class="type">int</span> <span class="title function_">size</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (mGarbage) &#123;</span><br><span class="line">            gc();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> mSize;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 检查该容器是否为空。</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> 如果为空，则为 &lt;code&gt;true&lt;/code&gt;，否则为 &lt;code&gt;false&lt;/code&gt;</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> <span class="type">boolean</span> <span class="title function_">isEmpty</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> size() == <span class="number">0</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 获取指定键的值。</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> key 要获取值的键</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> 与指定键关联的值；如果键不存在，则返回 &lt;code&gt;null&lt;/code&gt;</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="meta">@UnsupportedAppUsage</span></span><br><span class="line">    <span class="keyword">public</span> E <span class="title function_">get</span><span class="params">(<span class="type">int</span> key)</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> get(key, <span class="literal">null</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 获取指定键的值，如果键不存在，则返回提供的默认值。</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> key          要获取值的键</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> defaultValue 如果键不存在，则返回的默认值</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> 与指定键关联的值；如果键不存在，则返回提供的默认值</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="meta">@UnsupportedAppUsage</span></span><br><span class="line">    <span class="keyword">public</span> E <span class="title function_">get</span><span class="params">(<span class="type">int</span> key, E defaultValue)</span> &#123;</span><br><span class="line">        <span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> ContainerHelpers.binarySearch(mKeys, mSize, key);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (i &lt; <span class="number">0</span> || mValues[i] == DELETED) &#123;</span><br><span class="line">            <span class="keyword">return</span> defaultValue;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> (E) mValues[i];</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 其他方法...</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>根据上述源码我们可以看出</p>
+<p>SparseArray 包含以下重要成员变量和方法：</p>
+<p>成员变量：</p>
+<ul>
+<li><code>private int[] mKeys</code>: 保存键的数组。</li>
+<li><code>private Object[] mValues</code>: 保存值的数组。</li>
+<li><code>private int mSize</code>: SparseArray 中实际映射的数量。</li>
+<li><code>private boolean mGarbage</code>: 标记是否有删除的条目。</li>
+</ul>
+<p>方法：</p>
+<ul>
+<li><code>public SparseArray()</code>: 构造函数，创建一个空的 SparseArray，默认初始容量为 10。</li>
+<li><code>public SparseArray(int initialCapacity)</code>: 构造函数，创建一个空的 SparseArray，指定初始容量。</li>
+<li><code>public boolean contains(int key)</code>: 判断 SparseArray 是否包含指定的键。</li>
+<li><code>public E get(int key)</code>: 根据键获取对应的值。</li>
+<li><code>public E get(int key, E valueIfKeyNotFound)</code>: 根据键获取对应的值，如果不存在则返回指定的默认值。</li>
+<li><code>public void delete(int key)</code>: 删除指定键的映射关系。</li>
+<li><code>public void remove(int key)</code>: 删除指定键的映射关系。</li>
+<li><code>public void removeAt(int index)</code>: 根据索引删除映射关系。</li>
+<li><code>public void put(int key, E value)</code>: 添加或替换指定键的映射关系。</li>
+<li><code>public int size()</code>: 返回 SparseArray 中映射的数量。</li>
+<li><code>public int keyAt(int index)</code>: 返回指定索引处的键。</li>
+<li><code>public E valueAt(int index)</code>: 返回指定索引处的值。</li>
+<li><code>public void setValueAt(int index, E value)</code>: 设置指定索引处的值。</li>
+<li><code>public int indexOfKey(int key)</code>: 返回指定键的索引。</li>
+<li><code>public SparseArray&lt;E&gt; clone()</code>: 克隆 SparseArray。</li>
+</ul>
+<p>SparseArray 使用数组来存储键值对，通过二分查找来查找键的位置。在删除键值对时，会将对应位置的值标记为 DELETED，并在后续需要扩容、获取大小或值时进行垃圾回收操作。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>总体来说SparseArray具有以下特点</p>
+<ol>
+<li>内存效率高：SparseArray 的内部实现采用了稀疏数组的方式，它只存储非零值的元素，对于值为零的元素不占用内存空间。相比于普通的数组或 ArrayList，在存储稀疏数据时可以节省大量的内存空间。</li>
+<li>快速查找：SparseArray 内部使用了二分查找算法，因此可以在较快的时间复杂度内进行查找操作。对于较大的数据集，它的查找效率通常比 HashMap 或 TreeMap 高。</li>
+<li>不支持基本数据类型：SparseArray 只能存储对象类型的数据，不支持基本数据类型（如 int、boolean 等）。如果需要存储基本数据类型，可以使用对应的包装类作为值。</li>
+<li>自动排序：SparseArray 内部会对键进行自动排序，以保证键的有序性。这在一些需要有序存储数据的场景中非常有用。</li>
+<li>动态增删效率低：相比于普通的数组或 ArrayList，在动态插入或删除元素时，SparseArray 的效率较低。因为它需要进行数组的扩容或缩容操作，并且需要进行数据的移动。</li>
+</ol>
+
+
+<div class="article-footer reveal fs14"><section id="license"><div class="header"><span>许可协议</span></div><div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
+</div></section></div>
+
+</article>
+
+<div class="related-wrap reveal" id="read-next"><section class="header cap theme"><span>接下来阅读</span></section><section class="body fs14"><a id="next" href="/2021/06/15/Android%20%E6%9C%BA%E5%88%B6%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90(%E4%B8%80):%20%E4%BA%8B%E4%BB%B6%E5%88%86%E5%8F%91%E6%BA%90%E7%A0%81%E6%B5%85%E6%9E%90/">Android机制源码分析（一）：事件分发源码浅析<span class="note">较早</span></a><div class="line"></div></section></div>
+
+
+
+
+
+
+  <div class='related-wrap md reveal' id="comments">
+    <div class='cmt-title cap theme'>
+      快来参与讨论吧
+    </div>
+    <div class='cmt-body beaudar'>
+      
+
+<svg class="loading" style="vertical-align: middle;fill: currentColor;overflow: hidden;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2709"><path d="M832 512c0-176-144-320-320-320V128c211.2 0 384 172.8 384 384h-64zM192 512c0 176 144 320 320 320v64C300.8 896 128 723.2 128 512h64z" p-id="2710"></path></svg>
+
+<div id="beaudar" repo="tsparrot/cage-comments" issue-term="pathname" theme="preferred-color-scheme" input-position="top" comment-order="desc" loading="false" branch="main"></div>
+
+    </div>
+  </div>
+
+
+
+      
+<footer class="page-footer reveal fs12"><hr><div class="text"><p>本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
+<p>本站由 <a href="https://tsparrot.github.io/">@tsparrot</a> 创建，使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.7.0" title="v1.7.0">Stellar</a> 作为主题。</p>
+</div></footer>
+
+      <div class='float-panel mobile-only blur' style='display:none'>
+  <button type='button' class='sidebar-toggle mobile' onclick='sidebar.toggle()'>
+    <svg class="icon" style="width: 1em; height: 1em;vertical-align: middle;fill: currentColor;overflow: hidden;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="15301"><path d="M566.407 808.3c26.9-0.1 49.3-20.8 51.6-47.6-1.9-27.7-23.9-49.7-51.6-51.6h-412.6c-28.2-1.4-52.6 19.5-55.5 47.6 2.3 26.8 24.6 47.5 51.6 47.6h416.5v4z m309.3-249.9c26.9-0.1 49.3-20.8 51.6-47.6-2.2-26.8-24.6-47.5-51.6-47.6h-721.9c-27.7-2.8-52.5 17.4-55.3 45.1-0.1 0.8-0.1 1.7-0.2 2.5 0.9 27.2 23.6 48.5 50.7 47.6H875.707z m-103.1-245.9c26.9-0.1 49.3-20.8 51.6-47.6-0.4-28.3-23.2-51.1-51.5-51.6h-618.9c-29.5-1.1-54.3 21.9-55.5 51.4v0.2c1.4 27.8 25.2 49.2 53 47.8 0.8 0 1.7-0.1 2.5-0.2h618.8z" p-id="15302"></path><path d="M566.407 808.3c26.9-0.1 49.3-20.8 51.6-47.6-1.9-27.7-23.9-49.7-51.6-51.6h-412.6c-28.2-1.4-52.6 19.5-55.5 47.6 1.9 27.7 23.9 49.7 51.6 51.6h416.5z m309.3-249.9c26.9-0.1 49.3-20.8 51.6-47.6-2.2-26.8-24.6-47.5-51.6-47.6h-721.9c-27.7-2.8-52.5 17.4-55.3 45.1-0.1 0.8-0.1 1.7-0.2 2.5 0.9 27.2 23.6 48.5 50.7 47.6H875.707z m-103.1-245.9c26.9-0.1 49.3-20.8 51.6-47.6-0.4-28.3-23.2-51.1-51.5-51.6h-618.9c-29.5-1.1-54.3 21.9-55.5 51.4v0.2c1.4 27.8 25.2 49.2 53 47.8 0.8 0 1.7-0.1 2.5-0.2h618.8z" p-id="15303"></path></svg>
+  </button>
+</div>
+
+    </div>
+  </div>
+  <div class='scripts'>
+    <script type="text/javascript">
+  stellar = {
+    // 懒加载 css https://github.com/filamentgroup/loadCSS
+    loadCSS: (href, before, media, attributes) => {
+      var doc = window.document;
+      var ss = doc.createElement("link");
+      var ref;
+      if (before) {
+        ref = before;
+      } else {
+        var refs = (doc.body || doc.getElementsByTagName("head")[0]).childNodes;
+        ref = refs[refs.length - 1];
+      }
+      var sheets = doc.styleSheets;
+      if (attributes) {
+        for (var attributeName in attributes) {
+          if (attributes.hasOwnProperty(attributeName)) {
+            ss.setAttribute(attributeName, attributes[attributeName]);
+          }
+        }
+      }
+      ss.rel = "stylesheet";
+      ss.href = href;
+      ss.media = "only x";
+      function ready(cb) {
+        if (doc.body) {
+          return cb();
+        }
+        setTimeout(function () {
+          ready(cb);
+        });
+      }
+      ready(function () {
+        ref.parentNode.insertBefore(ss, before ? ref : ref.nextSibling);
+      });
+      var onloadcssdefined = function (cb) {
+        var resolvedHref = ss.href;
+        var i = sheets.length;
+        while (i--) {
+          if (sheets[i].href === resolvedHref) {
+            return cb();
+          }
+        }
+        setTimeout(function () {
+          onloadcssdefined(cb);
+        });
+      };
+      function loadCB() {
+        if (ss.addEventListener) {
+          ss.removeEventListener("load", loadCB);
+        }
+        ss.media = media || "all";
+      }
+      if (ss.addEventListener) {
+        ss.addEventListener("load", loadCB);
+      }
+      ss.onloadcssdefined = onloadcssdefined;
+      onloadcssdefined(loadCB);
+      return ss;
+    },
+
+    // 从 butterfly 和 volantis 获得灵感
+    loadScript: (src, opt) => new Promise((resolve, reject) => {
+      var script = document.createElement('script');
+      script.src = src;
+      if (opt) {
+        for (let key of Object.keys(opt)) {
+          script[key] = opt[key]
+        }
+      } else {
+        // 默认异步，如果需要同步，第二个参数传入 {} 即可
+        script.async = true
+      }
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    }),
+
+    // https://github.com/jerryc127/hexo-theme-butterfly
+    jQuery: (fn) => {
+      if (typeof jQuery === 'undefined') {
+        stellar.loadScript(stellar.plugins.jQuery).then(fn)
+      } else {
+        fn()
+      }
+    }
+  };
+  stellar.github = 'https://github.com/xaoxuu/hexo-theme-stellar/tree/1.7.0';
+  stellar.config = {
+    date_suffix: {
+      just: '刚刚',
+      min: '分钟前',
+      hour: '小时前',
+      day: '天前',
+      month: '个月前',
+    },
+  };
+
+  // required plugins (only load if needs)
+  stellar.plugins = {
+    jQuery: 'https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js',
+    sitesjs: '/js/plugins/sites.js',
+    friendsjs: '/js/plugins/friends.js',
+  };
+
+  // optional plugins
+  if ('true' == 'true') {
+    stellar.plugins.lazyload = Object.assign({"enable":true,"js":"https://cdn.jsdelivr.net/npm/vanilla-lazyload@17.3.1/dist/lazyload.min.js","transition":"blur"});
+  }
+  if ('true' == 'true') {
+    stellar.plugins.swiper = Object.assign({"enable":true,"css":"https://unpkg.com/swiper@6/swiper-bundle.min.css","js":"https://unpkg.com/swiper@6/swiper-bundle.min.js"});
+  }
+  if ('' == 'true') {
+    stellar.plugins.scrollreveal = Object.assign({"enable":null,"js":"https://cdn.jsdelivr.net/npm/scrollreveal@4.0.9/dist/scrollreveal.min.js","distance":"8px","duration":500,"interval":100,"scale":1});
+  }
+  if ('true' == 'true') {
+    stellar.plugins.preload = Object.assign({"enable":true,"service":"flying_pages","instant_page":"https://cdn.jsdelivr.net/gh/volantis-x/cdn-volantis@4.1.2/js/instant_page.js","flying_pages":"https://cdn.jsdelivr.net/gh/gijo-varghese/flying-pages@2.1.2/flying-pages.min.js"});
+  }
+  if ('true' == 'true') {
+    stellar.plugins.fancybox = Object.assign({"enable":true,"js":"https://cdn.jsdelivr.net/npm/@fancyapps/ui@4.0/dist/fancybox.umd.js","css":"https://cdn.jsdelivr.net/npm/@fancyapps/ui@4.0/dist/fancybox.css","selector":".swiper-slide img"});
+  }
+  if ('false' == 'true') {
+    stellar.plugins.heti = Object.assign({"enable":false,"css":"https://unpkg.com/heti/umd/heti.min.css","js":"https://unpkg.com/heti/umd/heti-addon.min.js"});
+  }
+</script>
+
+<!-- required -->
+
+  
+<script src="/js/main.js" async></script>
+
+
+
+<!-- optional -->
+
+  <script>
+  function loadBeaudar() {
+    const els = document.querySelectorAll("#comments #beaudar");
+    if (els.length === 0) return;
+    els.forEach((el, i) => {
+      try {
+        el.innerHTML = '';
+      } catch (error) {
+        console.log(error);
+      }
+      var script = document.createElement('script');
+      script.src = 'https://beaudar.lipk.org/client.js';
+      script.async = true;
+      for (let key of Object.keys(el.attributes)) {
+        let attr = el.attributes[key];
+        if (['class', 'id'].includes(attr.name) === false) {
+          script.setAttribute(attr.name, attr.value);
+        }
+      }
+      el.appendChild(script);
+    });
+  }
+  window.addEventListener('DOMContentLoaded', (event) => {
+      loadBeaudar();
+  });
+</script>
+
+
+
+
+<!-- inject -->
+
+
+  </div>
+</body>
+</html>
