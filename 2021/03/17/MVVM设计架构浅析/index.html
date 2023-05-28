@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang='zh-CN'>
+
+<head>
+  <meta name="generator" content="Hexo 6.3.0">
+  <meta charset="utf-8">
+  
+
+  <meta http-equiv='x-dns-prefetch-control' content='on' />
+  <link rel='dns-prefetch' href='https://cdn.jsdelivr.net'>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel='dns-prefetch' href='//unpkg.com'>
+
+  <meta name="renderer" content="webkit">
+  <meta name="force-rendering" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  <meta name="HandheldFriendly" content="True" >
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="theme-color" content="#f8f8f8">
+  <title>MVVM设计架构浅析 - 鹦鹉学舌</title>
+
+  
+
+  
+    <meta name="description" content="实习时用的是MVP架构，但Google官方本身已经将MVVM（Model-View-ViewModel）MV作为推荐的设计架构，在JetPack当中也推出了一系列组件来支持，简单谈一下我对MVVM的理解 MVVM架构特点 分离关注点：MVVM 将用户界面的表示（View）与业务逻辑和数据（ViewModel）分离开来，使得代码结构清晰，易于维护和扩展。ViewModel 作为连接 View 和 M">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MVVM设计架构浅析">
+<meta property="og:url" content="https://tsparrot.github.io/2021/03/17/MVVM%E8%AE%BE%E8%AE%A1%E6%9E%B6%E6%9E%84%E6%B5%85%E6%9E%90/index.html">
+<meta property="og:site_name" content="鹦鹉学舌">
+<meta property="og:description" content="实习时用的是MVP架构，但Google官方本身已经将MVVM（Model-View-ViewModel）MV作为推荐的设计架构，在JetPack当中也推出了一系列组件来支持，简单谈一下我对MVVM的理解 MVVM架构特点 分离关注点：MVVM 将用户界面的表示（View）与业务逻辑和数据（ViewModel）分离开来，使得代码结构清晰，易于维护和扩展。ViewModel 作为连接 View 和 M">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2021-03-17T04:00:00.000Z">
+<meta property="article:modified_time" content="2021-03-17T04:00:00.000Z">
+<meta property="article:author" content="tsparrot">
+<meta property="article:tag" content="Android">
+<meta name="twitter:card" content="summary">
+  
+  
+
+  <!-- feed -->
+  
+
+  
+    
+<link rel="stylesheet" href="/css/main.css">
+
+  
+
+  
+
+  
+</head>
+
+<body>
+  
+
+
+
+
+  <div class='l_body' id='start'>
+    <aside class='l_left' layout='post'>
+    
+
+
+<header class="header">
+
+<div class="logo-wrap"><a class="title" href="/"><div class="main">鹦鹉学舌</div><div class="sub cap">tsparrot's blog</div></a></div>
+<nav class="menu dis-select"><a class="nav-item active" href="/">博客</a><a class="nav-item" href="/about/">关于</a></nav></header>
+
+<div class="widgets">
+
+<div class="widget-wrap single" id="toc"><div class="widget-header cap dis-select"><span class="name">本文目录</span></div><div class="widget-body fs14"><div class="doc-tree active"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#MVVM%E6%9E%B6%E6%9E%84%E7%89%B9%E7%82%B9"><span class="toc-text">MVVM架构特点</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B8%A6%E6%9D%A5%E7%9A%84%E6%94%B9%E5%8F%98"><span class="toc-text">带来的改变</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%B8%E5%9E%8BMVVM%E6%A0%B7%E4%BE%8B"><span class="toc-text">典型MVVM样例</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#ViewModel%E7%9A%84%E8%81%8C%E8%B4%A3"><span class="toc-text">ViewModel的职责</span></a></li></ol></div></div></div>
+
+
+</div>
+
+
+    </aside>
+    <div class='l_main'>
+      
+
+      
+
+<div class="bread-nav fs12"><div id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a><span class="sep"></span><a class="cap breadcrumb" href="/">文章</a></div><div id="post-meta">发布于&nbsp;<time datetime="2021-03-17T04:00:00.000Z">2021-03-17</time></div></div>
+
+<article class='content md post'>
+<h1 class="article-title"><span>MVVM设计架构浅析</span></h1>
+<p>实习时用的是MVP架构，但Google官方本身已经将MVVM（Model-View-ViewModel）MV作为推荐的设计架构，在JetPack当中也推出了一系列组件来支持，简单谈一下我对MVVM的理解</p>
+<h2 id="MVVM架构特点"><a href="#MVVM架构特点" class="headerlink" title="MVVM架构特点"></a>MVVM架构特点</h2><ol>
+<li>分离关注点：MVVM 将用户界面的表示（View）与业务逻辑和数据（ViewModel）分离开来，使得代码结构清晰，易于维护和扩展。ViewModel 作为连接 View 和 Model 的中间层，负责处理用户交互和数据绑定。</li>
+<li>双向数据绑定：MVVM 支持双向数据绑定，使得 View 和 ViewModel 之间的数据同步变得简单。当 ViewModel 中的数据发生变化时，自动更新关联的 View，反之亦然。这样可以避免手动更新界面的繁琐操作，提高开发效率。</li>
+<li>响应式编程：MVVM 借助观察者模式和数据绑定，实现了响应式编程的特性。ViewModel 中的数据变化会触发相应的事件或通知，从而更新关联的 View。这种机制使得界面的状态和数据保持同步，并支持实时更新。</li>
+<li>可测试性：由于 MVVM 将业务逻辑从 View 中分离出来，使得 ViewModel 可以独立于界面进行单元测试。通过模拟输入和验证输出，可以方便地对 ViewModel 进行单元测试，保证代码质量和功能正确性。</li>
+<li>可重用性：MVVM 鼓励将界面逻辑与数据逻辑解耦，使得 ViewModel 可以在不同的界面中重复使用。这种可重用性降低了代码的重复编写，提高了开发效率。</li>
+</ol>
+<p>总的来说，MVVM 提供了一种结构清晰、可测试、可重用的开发模式，使得开发者可以更好地管理和组织代码，提高开发效率，并改善用户界面的交互和体验。</p>
+<h2 id="带来的改变"><a href="#带来的改变" class="headerlink" title="带来的改变"></a>带来的改变</h2><p>结合上述特点，说一下我理解的MVVM为Android应用开发带来的改变：</p>
+<ol>
+<li>分离关注点：分离关注点的设计可以减少代码的耦合性，使得开发者可以专注于不同层级的逻辑，提高代码的可读性和可维护性。</li>
+<li>可测试性：由于 ViewModel 是纯逻辑的组件，可以通过模拟输入和验证输出来进行单元测试，验证其功能的正确性。这样可以提高代码质量，降低 bug 出现的概率。</li>
+<li>数据驱动的界面更新：MVVM 采用双向数据绑定机制，实现了数据驱动的界面更新。ViewModel 中的数据变化会自动更新关联的 View，而用户界面上的输入变化也会实时反映到 ViewModel 的数据中。这种机制使得界面的状态和数据保持同步，减少了手动处理界面更新的代码，提高了开发效率。</li>
+<li>解决横竖屏切换问题：MVVM 架构中，ViewModel 负责保存和管理界面的数据状态。在横竖屏切换时，Activity 或 Fragment 可以销毁并重新创建，而 ViewModel 可以保持不变，从而避免了数据的丢失和重复加载。这种方式使得横竖屏切换更加流畅，用户无感知。</li>
+<li>提升代码的可重用性：由于 MVVM 架构将界面逻辑与数据逻辑解耦，使得 ViewModel 可以在不同的界面中重复使用。这种可重用性降低了代码的重复编写，提高了开发效率。</li>
+</ol>
+<p>总体而言，采用 MVVM 架构模式可以改善 Android 开发中的代码组织、可维护性、可测试性和用户界面的交互体验，使得开发者能够更好地管理和开发 Android 应用。</p>
+<h2 id="典型MVVM样例"><a href="#典型MVVM样例" class="headerlink" title="典型MVVM样例"></a>典型MVVM样例</h2><p>在典型的 Android MVVM 架构中，可能包含以下几个关键类：</p>
+<ol>
+<li>Model（模型）：Model 类表示应用程序的数据模型，通常是实体类或数据访问层。它负责封装数据和提供数据操作的方法，如从数据库或网络获取数据。</li>
+<li>View（视图）：View 类表示用户界面的可视化部分，通常是 Activity、Fragment 或自定义视图。它负责展示数据、接收用户输入和处理用户界面事件。</li>
+<li>ViewModel（视图模型）：ViewModel 类是连接 View 和 Model 的中间层。它持有与用户界面相关的数据，并提供方法供 View 层触发业务逻辑和数据操作。ViewModel 通常包含 LiveData 或 RxJava Observables，用于处理数据变化和实现双向数据绑定。</li>
+<li>Repository（仓库）：Repository 类用于封装数据源的访问逻辑。它可以从本地数据库、网络或其他数据源获取数据，并将数据提供给 ViewModel 层。Repository 的存在可以解耦 ViewModel 层和底层数据源的具体实现。</li>
+<li>LiveData（生命周期感知的数据持有者）：LiveData 是 Android 架构组件之一，用于在应用程序组件之间进行数据通信。它是一种观察者模式的实现，可以感知生命周期，并确保数据的更新仅在活跃状态下进行。</li>
+<li>Data Binding（数据绑定）：Data Binding 是 Android 的特性之一，用于在布局文件中直接绑定数据到 View。它通过生成绑定类，将视图和 ViewModel 之间的数据绑定自动化。</li>
+</ol>
+<p>这些类是 MVVM 架构的核心组件，每个类负责不同的职责，共同协作实现数据的管理、展示和交互。然而，具体的实现方式可能因开发者和项目需求而有所不同。</p>
+<p>下面展示一个简单登录页面的示例代码：</p>
+<p><strong>activity_login.xml（布局文件）：</strong></p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">layout</span> <span class="attr">xmlns:android</span>=<span class="string">&quot;http://schemas.android.com/apk/res/android&quot;</span>&gt;</span></span><br><span class="line"></span><br><span class="line">    <span class="tag">&lt;<span class="name">data</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">variable</span></span></span><br><span class="line"><span class="tag">            <span class="attr">name</span>=<span class="string">&quot;viewModel&quot;</span></span></span><br><span class="line"><span class="tag">            <span class="attr">type</span>=<span class="string">&quot;com.example.mvvm.LoginViewModel&quot;</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">data</span>&gt;</span></span><br><span class="line"></span><br><span class="line">    <span class="tag">&lt;<span class="name">LinearLayout</span></span></span><br><span class="line"><span class="tag">        <span class="attr">android:layout_width</span>=<span class="string">&quot;match_parent&quot;</span></span></span><br><span class="line"><span class="tag">        <span class="attr">android:layout_height</span>=<span class="string">&quot;match_parent&quot;</span></span></span><br><span class="line"><span class="tag">        <span class="attr">android:orientation</span>=<span class="string">&quot;vertical&quot;</span>&gt;</span></span><br><span class="line"></span><br><span class="line">        <span class="tag">&lt;<span class="name">EditText</span></span></span><br><span class="line"><span class="tag">            <span class="attr">android:layout_width</span>=<span class="string">&quot;match_parent&quot;</span></span></span><br><span class="line"><span class="tag">            <span class="attr">android:layout_height</span>=<span class="string">&quot;wrap_content&quot;</span></span></span><br><span class="line"><span class="tag">            <span class="attr">android:text</span>=<span class="string">&quot;@=&#123;viewModel.username&#125;&quot;</span> /&gt;</span></span><br><span class="line"></span><br><span class="line">        <span class="tag">&lt;<span class="name">EditText</span></span></span><br><span class="line"><span class="tag">            <span class="attr">android:layout_width</span>=<span class="string">&quot;match_parent&quot;</span></span></span><br><span class="line"><span class="tag">            <span class="attr">android:layout_height</span>=<span class="string">&quot;wrap_content&quot;</span></span></span><br><span class="line"><span class="tag">            <span class="attr">android:text</span>=<span class="string">&quot;@=&#123;viewModel.password&#125;&quot;</span> /&gt;</span></span><br><span class="line"></span><br><span class="line">        <span class="tag">&lt;<span class="name">Button</span></span></span><br><span class="line"><span class="tag">            <span class="attr">android:layout_width</span>=<span class="string">&quot;wrap_content&quot;</span></span></span><br><span class="line"><span class="tag">            <span class="attr">android:layout_height</span>=<span class="string">&quot;wrap_content&quot;</span></span></span><br><span class="line"><span class="tag">            <span class="attr">android:text</span>=<span class="string">&quot;Login&quot;</span></span></span><br><span class="line"><span class="tag">            <span class="attr">android:onClick</span>=<span class="string">&quot;@&#123;viewModel::onLoginButtonClick&#125;&quot;</span> /&gt;</span></span><br><span class="line"></span><br><span class="line">    <span class="tag">&lt;/<span class="name">LinearLayout</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">layout</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>LoginViewModel.kt（ViewModel）：</strong></p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">LoginViewModel</span> : <span class="type">ViewModel</span></span>() &#123;</span><br><span class="line">    <span class="keyword">val</span> username = MutableLiveData&lt;String&gt;()</span><br><span class="line">    <span class="keyword">val</span> password = MutableLiveData&lt;String&gt;()</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">fun</span> <span class="title">onLoginButtonClick</span><span class="params">()</span></span> &#123;</span><br><span class="line">        <span class="keyword">val</span> enteredUsername = username.value</span><br><span class="line">        <span class="keyword">val</span> enteredPassword = password.value</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 执行登录逻辑</span></span><br><span class="line">        <span class="comment">// ...</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>LoginActivity.kt（Activity）：</strong></p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">LoginActivity</span> : <span class="type">AppCompatActivity</span></span>() &#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">lateinit</span> <span class="keyword">var</span> binding: ActivityLoginBinding</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">lateinit</span> <span class="keyword">var</span> viewModel: LoginViewModel</span><br><span class="line"></span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">onCreate</span><span class="params">(savedInstanceState: <span class="type">Bundle</span>?)</span></span> &#123;</span><br><span class="line">        <span class="keyword">super</span>.onCreate(savedInstanceState)</span><br><span class="line">        binding = DataBindingUtil.setContentView(<span class="keyword">this</span>, R.layout.activity_login)</span><br><span class="line">        viewModel = ViewModelProvider(<span class="keyword">this</span>).<span class="keyword">get</span>(LoginViewModel::<span class="keyword">class</span>.java)</span><br><span class="line">        binding.viewModel = viewModel</span><br><span class="line">        binding.lifecycleOwner = <span class="keyword">this</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在上述代码示例中，布局文件 activity_login.xml 使用了数据绑定，其中的 EditText 和 Button 的文本属性与 ViewModel 的 username 和 password 属性进行双向绑定。ViewModel 类 LoginViewModel 包含了处理登录逻辑的方法和 MutableLiveData 对象用于保存输入的用户名和密码。Activity 类 LoginActivity 在 onCreate() 方法中使用数据绑定设置 ViewModel 和生命周期所有者。</p>
+<h2 id="ViewModel的职责"><a href="#ViewModel的职责" class="headerlink" title="ViewModel的职责"></a>ViewModel的职责</h2><p>在 MVVM 架构中，业务逻辑通常会放在 ViewModel 类中。ViewModel 作为 View 和 Model 之间的中间层，负责处理用户界面的交互和数据操作。</p>
+<p>具体来说，ViewModel 类可以包含以下业务逻辑：</p>
+<ol>
+<li>用户交互处理：ViewModel 可以响应用户的交互操作，例如按钮点击、列表项选择等。当用户与界面进行交互时，ViewModel 可以执行相应的业务逻辑，如验证输入、发起网络请求、处理数据等。</li>
+<li>数据转换和格式化：ViewModel 可以负责将 Model 中的原始数据进行转换和格式化，以满足界面的显示需求。例如，将日期数据转换为特定格式、将数值进行格式化等。</li>
+<li>数据持久化：如果需要将数据保存到本地存储（如数据库），ViewModel 可以负责处理数据的读取和写入操作。它可以与 Repository 层协同工作，从数据源获取数据或将数据存储到数据源中。</li>
+<li>状态管理：ViewModel 可以管理界面的状态，如加载中、错误状态、空数据状态等。它可以维护相关的状态变量，并根据业务逻辑的执行情况更新状态，以便在界面上正确显示相应的状态。</li>
+</ol>
+<p>将业务逻辑放在 ViewModel 中有助于将用户界面和业务逻辑分离，使得代码结构更清晰、易于维护，并提供可测试性。同时，View 层只需要关注界面的展示和用户交互，而不需要直接操作数据和执行复杂的业务逻辑。</p>
+<p>此外，ViewModel 应该遵循单一职责原则，不应该包含过多的业务逻辑。如果某些业务逻辑比较复杂或耗时，可以考虑将其委托给其他类或使用异步操作。</p>
+
+
+<div class="article-footer reveal fs14"><section id="license"><div class="header"><span>许可协议</span></div><div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
+</div></section></div>
+
+</article>
+
+<div class="related-wrap reveal" id="read-next"><section class="header cap theme"><span>接下来阅读</span></section><section class="body fs14"><a id="next" href="/2021/03/10/%E4%BB%8EPressableTextView%20click%20%E8%B8%A9%E5%9D%91%E7%9C%8B%E4%BA%8B%E4%BB%B6%E5%88%86%E5%8F%91/">从PressableTextView click 踩坑看事件分发<span class="note">较早</span></a><div class="line"></div><a id="prev" href="/2021/05/20/Android%20Studio%20Sync%20Failed%E8%AE%B0%E5%BD%95/">Android Studio Sync Failed记录<span class="note">较新</span></a></section></div>
+
+
+
+
+
+
+  <div class='related-wrap md reveal' id="comments">
+    <div class='cmt-title cap theme'>
+      快来参与讨论吧
+    </div>
+    <div class='cmt-body beaudar'>
+      
+
+<svg class="loading" style="vertical-align: middle;fill: currentColor;overflow: hidden;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2709"><path d="M832 512c0-176-144-320-320-320V128c211.2 0 384 172.8 384 384h-64zM192 512c0 176 144 320 320 320v64C300.8 896 128 723.2 128 512h64z" p-id="2710"></path></svg>
+
+<div id="beaudar" repo="tsparrot/cage-comments" issue-term="pathname" theme="preferred-color-scheme" input-position="top" comment-order="desc" loading="false" branch="main"></div>
+
+    </div>
+  </div>
+
+
+
+      
+<footer class="page-footer reveal fs12"><hr><div class="text"><p>本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
+<p>本站由 <a href="https://tsparrot.github.io/">@tsparrot</a> 创建，使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.7.0" title="v1.7.0">Stellar</a> 作为主题。</p>
+</div></footer>
+
+      <div class='float-panel mobile-only blur' style='display:none'>
+  <button type='button' class='sidebar-toggle mobile' onclick='sidebar.toggle()'>
+    <svg class="icon" style="width: 1em; height: 1em;vertical-align: middle;fill: currentColor;overflow: hidden;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="15301"><path d="M566.407 808.3c26.9-0.1 49.3-20.8 51.6-47.6-1.9-27.7-23.9-49.7-51.6-51.6h-412.6c-28.2-1.4-52.6 19.5-55.5 47.6 2.3 26.8 24.6 47.5 51.6 47.6h416.5v4z m309.3-249.9c26.9-0.1 49.3-20.8 51.6-47.6-2.2-26.8-24.6-47.5-51.6-47.6h-721.9c-27.7-2.8-52.5 17.4-55.3 45.1-0.1 0.8-0.1 1.7-0.2 2.5 0.9 27.2 23.6 48.5 50.7 47.6H875.707z m-103.1-245.9c26.9-0.1 49.3-20.8 51.6-47.6-0.4-28.3-23.2-51.1-51.5-51.6h-618.9c-29.5-1.1-54.3 21.9-55.5 51.4v0.2c1.4 27.8 25.2 49.2 53 47.8 0.8 0 1.7-0.1 2.5-0.2h618.8z" p-id="15302"></path><path d="M566.407 808.3c26.9-0.1 49.3-20.8 51.6-47.6-1.9-27.7-23.9-49.7-51.6-51.6h-412.6c-28.2-1.4-52.6 19.5-55.5 47.6 1.9 27.7 23.9 49.7 51.6 51.6h416.5z m309.3-249.9c26.9-0.1 49.3-20.8 51.6-47.6-2.2-26.8-24.6-47.5-51.6-47.6h-721.9c-27.7-2.8-52.5 17.4-55.3 45.1-0.1 0.8-0.1 1.7-0.2 2.5 0.9 27.2 23.6 48.5 50.7 47.6H875.707z m-103.1-245.9c26.9-0.1 49.3-20.8 51.6-47.6-0.4-28.3-23.2-51.1-51.5-51.6h-618.9c-29.5-1.1-54.3 21.9-55.5 51.4v0.2c1.4 27.8 25.2 49.2 53 47.8 0.8 0 1.7-0.1 2.5-0.2h618.8z" p-id="15303"></path></svg>
+  </button>
+</div>
+
+    </div>
+  </div>
+  <div class='scripts'>
+    <script type="text/javascript">
+  stellar = {
+    // 懒加载 css https://github.com/filamentgroup/loadCSS
+    loadCSS: (href, before, media, attributes) => {
+      var doc = window.document;
+      var ss = doc.createElement("link");
+      var ref;
+      if (before) {
+        ref = before;
+      } else {
+        var refs = (doc.body || doc.getElementsByTagName("head")[0]).childNodes;
+        ref = refs[refs.length - 1];
+      }
+      var sheets = doc.styleSheets;
+      if (attributes) {
+        for (var attributeName in attributes) {
+          if (attributes.hasOwnProperty(attributeName)) {
+            ss.setAttribute(attributeName, attributes[attributeName]);
+          }
+        }
+      }
+      ss.rel = "stylesheet";
+      ss.href = href;
+      ss.media = "only x";
+      function ready(cb) {
+        if (doc.body) {
+          return cb();
+        }
+        setTimeout(function () {
+          ready(cb);
+        });
+      }
+      ready(function () {
+        ref.parentNode.insertBefore(ss, before ? ref : ref.nextSibling);
+      });
+      var onloadcssdefined = function (cb) {
+        var resolvedHref = ss.href;
+        var i = sheets.length;
+        while (i--) {
+          if (sheets[i].href === resolvedHref) {
+            return cb();
+          }
+        }
+        setTimeout(function () {
+          onloadcssdefined(cb);
+        });
+      };
+      function loadCB() {
+        if (ss.addEventListener) {
+          ss.removeEventListener("load", loadCB);
+        }
+        ss.media = media || "all";
+      }
+      if (ss.addEventListener) {
+        ss.addEventListener("load", loadCB);
+      }
+      ss.onloadcssdefined = onloadcssdefined;
+      onloadcssdefined(loadCB);
+      return ss;
+    },
+
+    // 从 butterfly 和 volantis 获得灵感
+    loadScript: (src, opt) => new Promise((resolve, reject) => {
+      var script = document.createElement('script');
+      script.src = src;
+      if (opt) {
+        for (let key of Object.keys(opt)) {
+          script[key] = opt[key]
+        }
+      } else {
+        // 默认异步，如果需要同步，第二个参数传入 {} 即可
+        script.async = true
+      }
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    }),
+
+    // https://github.com/jerryc127/hexo-theme-butterfly
+    jQuery: (fn) => {
+      if (typeof jQuery === 'undefined') {
+        stellar.loadScript(stellar.plugins.jQuery).then(fn)
+      } else {
+        fn()
+      }
+    }
+  };
+  stellar.github = 'https://github.com/xaoxuu/hexo-theme-stellar/tree/1.7.0';
+  stellar.config = {
+    date_suffix: {
+      just: '刚刚',
+      min: '分钟前',
+      hour: '小时前',
+      day: '天前',
+      month: '个月前',
+    },
+  };
+
+  // required plugins (only load if needs)
+  stellar.plugins = {
+    jQuery: 'https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js',
+    sitesjs: '/js/plugins/sites.js',
+    friendsjs: '/js/plugins/friends.js',
+  };
+
+  // optional plugins
+  if ('true' == 'true') {
+    stellar.plugins.lazyload = Object.assign({"enable":true,"js":"https://cdn.jsdelivr.net/npm/vanilla-lazyload@17.3.1/dist/lazyload.min.js","transition":"blur"});
+  }
+  if ('true' == 'true') {
+    stellar.plugins.swiper = Object.assign({"enable":true,"css":"https://unpkg.com/swiper@6/swiper-bundle.min.css","js":"https://unpkg.com/swiper@6/swiper-bundle.min.js"});
+  }
+  if ('' == 'true') {
+    stellar.plugins.scrollreveal = Object.assign({"enable":null,"js":"https://cdn.jsdelivr.net/npm/scrollreveal@4.0.9/dist/scrollreveal.min.js","distance":"8px","duration":500,"interval":100,"scale":1});
+  }
+  if ('true' == 'true') {
+    stellar.plugins.preload = Object.assign({"enable":true,"service":"flying_pages","instant_page":"https://cdn.jsdelivr.net/gh/volantis-x/cdn-volantis@4.1.2/js/instant_page.js","flying_pages":"https://cdn.jsdelivr.net/gh/gijo-varghese/flying-pages@2.1.2/flying-pages.min.js"});
+  }
+  if ('true' == 'true') {
+    stellar.plugins.fancybox = Object.assign({"enable":true,"js":"https://cdn.jsdelivr.net/npm/@fancyapps/ui@4.0/dist/fancybox.umd.js","css":"https://cdn.jsdelivr.net/npm/@fancyapps/ui@4.0/dist/fancybox.css","selector":".swiper-slide img"});
+  }
+  if ('false' == 'true') {
+    stellar.plugins.heti = Object.assign({"enable":false,"css":"https://unpkg.com/heti/umd/heti.min.css","js":"https://unpkg.com/heti/umd/heti-addon.min.js"});
+  }
+</script>
+
+<!-- required -->
+
+  
+<script src="/js/main.js" async></script>
+
+
+
+<!-- optional -->
+
+  <script>
+  function loadBeaudar() {
+    const els = document.querySelectorAll("#comments #beaudar");
+    if (els.length === 0) return;
+    els.forEach((el, i) => {
+      try {
+        el.innerHTML = '';
+      } catch (error) {
+        console.log(error);
+      }
+      var script = document.createElement('script');
+      script.src = 'https://beaudar.lipk.org/client.js';
+      script.async = true;
+      for (let key of Object.keys(el.attributes)) {
+        let attr = el.attributes[key];
+        if (['class', 'id'].includes(attr.name) === false) {
+          script.setAttribute(attr.name, attr.value);
+        }
+      }
+      el.appendChild(script);
+    });
+  }
+  window.addEventListener('DOMContentLoaded', (event) => {
+      loadBeaudar();
+  });
+</script>
+
+
+
+
+<!-- inject -->
+
+
+  </div>
+</body>
+</html>
