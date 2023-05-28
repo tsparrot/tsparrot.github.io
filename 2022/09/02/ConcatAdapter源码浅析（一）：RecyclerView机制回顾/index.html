@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang='zh-CN'>
+
+<head>
+  <meta name="generator" content="Hexo 6.3.0">
+  <meta charset="utf-8">
+  
+
+  <meta http-equiv='x-dns-prefetch-control' content='on' />
+  <link rel='dns-prefetch' href='https://cdn.jsdelivr.net'>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel='dns-prefetch' href='//unpkg.com'>
+
+  <meta name="renderer" content="webkit">
+  <meta name="force-rendering" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  <meta name="HandheldFriendly" content="True" >
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="theme-color" content="#f8f8f8">
+  <title>ConcatAdapter源码浅析（一）：RecyclerView机制回顾 - 鹦鹉学舌</title>
+
+  
+
+  
+    <meta name="description" content="分析ConcatAdapter源码之前，先来回顾一下RecyclerView的基本机制： 核心机制RecyclerView 是 Android 开发中常用的用于展示列表和网格布局的控件。它的核心机制主要包括三个组件：LayoutManager（布局管理器）、Adapter（适配器）和ViewHolder（视图持有者）。 LayoutManager（布局管理器）负责决定RecyclerView中子项">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ConcatAdapter源码浅析（一）：RecyclerView机制回顾">
+<meta property="og:url" content="https://tsparrot.github.io/2022/09/02/ConcatAdapter%E6%BA%90%E7%A0%81%E6%B5%85%E6%9E%90%EF%BC%88%E4%B8%80%EF%BC%89%EF%BC%9ARecyclerView%E6%9C%BA%E5%88%B6%E5%9B%9E%E9%A1%BE/index.html">
+<meta property="og:site_name" content="鹦鹉学舌">
+<meta property="og:description" content="分析ConcatAdapter源码之前，先来回顾一下RecyclerView的基本机制： 核心机制RecyclerView 是 Android 开发中常用的用于展示列表和网格布局的控件。它的核心机制主要包括三个组件：LayoutManager（布局管理器）、Adapter（适配器）和ViewHolder（视图持有者）。 LayoutManager（布局管理器）负责决定RecyclerView中子项">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-09-02T07:54:00.000Z">
+<meta property="article:modified_time" content="2022-09-02T07:54:00.000Z">
+<meta property="article:author" content="tsparrot">
+<meta property="article:tag" content="Android">
+<meta name="twitter:card" content="summary">
+  
+  
+
+  <!-- feed -->
+  
+
+  
+    
+<link rel="stylesheet" href="/css/main.css">
+
+  
+
+  
+
+  
+</head>
+
+<body>
+  
+
+
+
+
+  <div class='l_body' id='start'>
+    <aside class='l_left' layout='post'>
+    
+
+
+<header class="header">
+
+<div class="logo-wrap"><a class="title" href="/"><div class="main">鹦鹉学舌</div><div class="sub cap">tsparrot's blog</div></a></div>
+<nav class="menu dis-select"><a class="nav-item active" href="/">博客</a><a class="nav-item" href="/about/">关于</a></nav></header>
+
+<div class="widgets">
+
+<div class="widget-wrap single" id="toc"><div class="widget-header cap dis-select"><span class="name">本文目录</span></div><div class="widget-body fs14"><div class="doc-tree active"><ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E6%9C%BA%E5%88%B6"><span class="toc-text">核心机制</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ViewHolder%E4%BD%9C%E7%94%A8"><span class="toc-text">ViewHolder作用</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9B%9E%E6%94%B6%E5%92%8C%E9%87%8D%E7%94%A8%E6%9C%BA%E5%88%B6"><span class="toc-text">回收和重用机制</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ItemViewType"><span class="toc-text">ItemViewType</span></a></li></ol></div></div></div>
+
+
+</div>
+
+
+    </aside>
+    <div class='l_main'>
+      
+
+      
+
+<div class="bread-nav fs12"><div id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a><span class="sep"></span><a class="cap breadcrumb" href="/">文章</a></div><div id="post-meta">发布于&nbsp;<time datetime="2022-09-02T07:54:00.000Z">2022-09-02</time></div></div>
+
+<article class='content md post'>
+<h1 class="article-title"><span>ConcatAdapter源码浅析（一）：RecyclerView机制回顾</span></h1>
+<p>分析ConcatAdapter源码之前，先来回顾一下RecyclerView的基本机制：</p>
+<h3 id="核心机制"><a href="#核心机制" class="headerlink" title="核心机制"></a>核心机制</h3><p>RecyclerView 是 Android 开发中常用的用于展示列表和网格布局的控件。它的核心机制主要包括三个组件：LayoutManager（布局管理器）、Adapter（适配器）和ViewHolder（视图持有者）。</p>
+<p>LayoutManager（布局管理器）负责决定RecyclerView中子项的排列方式。它负责测量和定位每个子项的位置，并决定它们如何在屏幕上展示。RecyclerView 提供了几种内置的布局管理器，如线性布局管理器（LinearLayoutManager）、网格布局管理器（GridLayoutManager）和瀑布流布局管理器（StaggeredGridLayoutManager）。开发者也可以自定义布局管理器来满足特定需求。</p>
+<p>Adapter（适配器）负责为RecyclerView提供数据，并创建对应的ViewHolder。它将数据集绑定到视图上，并负责创建、复用和更新ViewHolder。开发者需要继承RecyclerView.Adapter类并实现必要的方法，如创建ViewHolder、绑定数据和确定数据集大小等。Adapter还可以通过添加点击事件监听器来处理用户与子项的交互。</p>
+<p>ViewHolder（视图持有者）用于缓存RecyclerView的子项视图。当子项滚出屏幕时，ViewHolder会将其缓存起来，以便在需要时重新利用。这样可以减少视图创建和销毁的次数，提高列表的滚动性能。ViewHolder一般包含了子项视图的引用，可以通过调用findViewById等方法获取子项视图的各个组件，并将其与数据进行绑定。</p>
+<p>使用RecyclerView时，首先需要创建一个RecyclerView实例，并设置相应的布局管理器和适配器。然后，将数据集传递给适配器，并将适配器设置到RecyclerView中。RecyclerView会根据布局管理器的要求，自动调用适配器的方法来创建、绑定和更新子项视图。</p>
+<h3 id="ViewHolder作用"><a href="#ViewHolder作用" class="headerlink" title="ViewHolder作用"></a>ViewHolder作用</h3><p>ViewHolder 的作用是缓存子项视图的引用，以便在需要时快速访问和更新视图内容。它是 RecyclerView 在处理大量子项时提高性能的关键机制之一。</p>
+<p>当 RecyclerView 中的子项滚出屏幕时，它们会被回收并可供后续的子项重复使用。ViewHolder 的主要作用是持有每个子项视图中的控件的引用，以便在需要时可以快速获取它们，而不必每次都通过 findViewById 等方法来查找。</p>
+<p>通过 ViewHolder 的引用，可以直接访问和更新子项视图的各个组件，例如文本视图、图像视图等。这样可以避免每次滚动或数据更新时都重新查找视图控件，提高了列表的滚动性能和渲染效率。</p>
+<p>ViewHolder 类通常定义为 RecyclerView.Adapter 的内部类。在适配器的 onCreateViewHolder 方法中，我们使用布局资源创建 ViewHolder，并将子项布局中的控件与 ViewHolder 的成员变量进行绑定。然后，在 onBindViewHolder 方法中，我们可以直接通过 ViewHolder 来访问和更新子项视图的内容，以展示正确的数据。</p>
+<p>通过使用 ViewHolder，RecyclerView 在滚动和数据更新时可以更高效地重用子项视图，减少了视图的创建和销毁次数，从而提升了列表的性能和响应速度。</p>
+<p>通过将 ViewHolder 对象与特定的子项视图绑定，RecyclerView 可以在滚动和数据更新时高效地管理和重用子项视图，以提升列表的性能和响应速度。</p>
+<h3 id="回收和重用机制"><a href="#回收和重用机制" class="headerlink" title="回收和重用机制"></a>回收和重用机制</h3><p>当 RecyclerView 中的子项滚出屏幕时，为了节省资源和提高性能，它会采用回收和重用机制来管理 ViewHolder 对象的生命周期。下面是关于 RecyclerView 回收和重用机制的详细讲解：</p>
+<ol>
+<li>初次创建 ViewHolder：当 RecyclerView 需要显示新的子项时，它会调用 RecyclerView.Adapter 的 onCreateViewHolder() 方法来创建 ViewHolder 对象。在这个方法中，我们通过布局资源创建 ViewHolder，并将子项布局中的视图组件与 ViewHolder 的成员变量进行绑定。</li>
+<li>绑定 ViewHolder 数据：在 RecyclerView.Adapter 的 onBindViewHolder() 方法中，RecyclerView 将数据绑定到 ViewHolder 对应的子项视图上。我们可以通过 ViewHolder 的引用来访问和更新子项视图的内容。</li>
+<li>子项滚出屏幕：当子项滚出屏幕时，RecyclerView 会将对应的 ViewHolder 对象放入内部的 ViewHolder 池中，以便后续重用。这个过程发生在 RecyclerView 的布局管理器（LayoutManager）中，当子项不再可见或超出可见范围时触发。</li>
+<li>重用 ViewHolder：当需要显示新的子项时，RecyclerView 会首先尝试从 ViewHolder 池中获取可重用的 ViewHolder 对象，而不是重新创建新的对象。它会调用 RecyclerView.Adapter 的 onBindViewHolder() 方法，将新的数据绑定到重用的 ViewHolder 上。</li>
+<li>更新数据：在 onBindViewHolder() 方法中，我们根据新的位置（position）获取对应的数据项，并通过 ViewHolder 的引用来更新子项视图的内容。这确保了重用的 ViewHolder 显示正确的数据。</li>
+</ol>
+<p>通过回收和重用机制，RecyclerView 避免了重复创建和销毁子项视图以及对应的 ViewHolder，提高了列表的渲染性能和滚动的流畅性。通过复用已有的 ViewHolder 对象，它可以减少不必要的内存分配和对象创建开销，提高应用的性能和响应速度。</p>
+<p>需要注意的是，RecyclerView 的回收和重用机制是由其内部的布局管理器（LayoutManager）来实现和控制的。不同的布局管理器可能有不同的策略和行为，以适应不同的布局需求和子项视图的变化。因此，具体的回收和重用机制可能会因布局管理器的不同而有所差异。</p>
+<h3 id="ItemViewType"><a href="#ItemViewType" class="headerlink" title="ItemViewType"></a>ItemViewType</h3><p>RecyclerView回顾最后一部分来介绍一下和我们今天这次的主角ConcatAdapter相关的ItemViewType，在很多场景下RecyclerView会包含多种类型的子项，我们可以使用 getItemViewType() 方法来返回每个子项的类型。根据子项类型的不同，我们可以在 onCreateViewHolder() 方法中创建不同类型的 ViewHolder，并在 onBindViewHolder() 方法中根据类型进行数据绑定。</p>
+<p>进一步假设，如果在同一个RecyclerView中的这两种类型的数据获取到的时机不一样，那么我们更新数据的代码会变成类似如下所示：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">MyAdapter</span> <span class="keyword">extends</span> <span class="title class_">RecyclerView</span>.Adapter&lt;RecyclerView.ViewHolder&gt; &#123;</span><br><span class="line">    <span class="keyword">private</span> List&lt;Item1&gt; itemList1;</span><br><span class="line">    <span class="keyword">private</span> List&lt;Item2&gt; itemList2;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 定义不同的数据类型</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">int</span> <span class="variable">TYPE_ITEM1</span> <span class="operator">=</span> <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">int</span> <span class="variable">TYPE_ITEM2</span> <span class="operator">=</span> <span class="number">2</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">MyAdapter</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="built_in">this</span>.itemList1 = <span class="keyword">new</span> <span class="title class_">ArrayList</span>&lt;&gt;();</span><br><span class="line">        <span class="built_in">this</span>.itemList2 = <span class="keyword">new</span> <span class="title class_">ArrayList</span>&lt;&gt;();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">updateItem1List</span><span class="params">(List&lt;Item1&gt; newDataList)</span> &#123;</span><br><span class="line">        itemList1.clear();</span><br><span class="line">        itemList1.addAll(newDataList);</span><br><span class="line">        notifyDataSetChanged();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">updateItem2List</span><span class="params">(List&lt;Item2&gt; newDataList)</span> &#123;</span><br><span class="line">        itemList2.clear();</span><br><span class="line">        itemList2.addAll(newDataList);</span><br><span class="line">        notifyDataSetChanged();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="type">int</span> <span class="title function_">getItemViewType</span><span class="params">(<span class="type">int</span> position)</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (position &lt; itemList1.size()) &#123;</span><br><span class="line">            <span class="keyword">return</span> TYPE_ITEM1;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> TYPE_ITEM2;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> RecyclerView.ViewHolder <span class="title function_">onCreateViewHolder</span><span class="params">(ViewGroup parent, <span class="type">int</span> viewType)</span> &#123;</span><br><span class="line">        <span class="type">LayoutInflater</span> <span class="variable">inflater</span> <span class="operator">=</span> LayoutInflater.from(parent.getContext());</span><br><span class="line">        RecyclerView.ViewHolder viewHolder;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">switch</span> (viewType) &#123;</span><br><span class="line">            <span class="keyword">case</span> TYPE_ITEM1:</span><br><span class="line">                <span class="type">View</span> <span class="variable">itemView1</span> <span class="operator">=</span> inflater.inflate(R.layout.item_layout1, parent, <span class="literal">false</span>);</span><br><span class="line">                viewHolder = <span class="keyword">new</span> <span class="title class_">ViewHolder1</span>(itemView1);</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            <span class="keyword">case</span> TYPE_ITEM2:</span><br><span class="line">                <span class="type">View</span> <span class="variable">itemView2</span> <span class="operator">=</span> inflater.inflate(R.layout.item_layout2, parent, <span class="literal">false</span>);</span><br><span class="line">                viewHolder = <span class="keyword">new</span> <span class="title class_">ViewHolder2</span>(itemView2);</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            <span class="keyword">default</span>:</span><br><span class="line">                <span class="comment">// 处理其他数据类型的 ViewHolder</span></span><br><span class="line">                <span class="type">View</span> <span class="variable">itemView</span> <span class="operator">=</span> inflater.inflate(R.layout.default_item_layout, parent, <span class="literal">false</span>);</span><br><span class="line">                viewHolder = <span class="keyword">new</span> <span class="title class_">DefaultViewHolder</span>(itemView);</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> viewHolder;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onBindViewHolder</span><span class="params">(RecyclerView.ViewHolder holder, <span class="type">int</span> position)</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (holder <span class="keyword">instanceof</span> ViewHolder1) &#123;</span><br><span class="line">            ((ViewHolder1) holder).bindData(itemList1.get(position));</span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (holder <span class="keyword">instanceof</span> ViewHolder2) &#123;</span><br><span class="line">            ((ViewHolder2) holder).bindData(itemList2.get(position - itemList1.size()));</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="comment">// 处理其他数据类型的 ViewHolder</span></span><br><span class="line">            <span class="comment">// ...</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="type">int</span> <span class="title function_">getItemCount</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> itemList1.size() + itemList2.size();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在上述示例代码中，我们通过 <code>updateItem1List()</code> 和 <code>updateItem2List()</code> 方法分别更新 <code>itemList1</code> 和 <code>itemList2</code> 数据集。在 <code>onBindViewHolder()</code> 方法中，根据 <code>getItemViewType()</code> 返回的类型来判断要绑定的数据是来自 <code>itemList1</code> 还是 <code>itemList2</code>。</p>
+<p>当你获取到对应类型的数据后，调用相应的更新方法，并传入新的数据列表。这样会更新对应的数据集，并自动刷新 RecyclerView 的显示。</p>
+<p>需要注意的是，在更新数据后，你需要调用适当的通知方法（如 <code>notifyDataSetChanged()</code>、<code>notifyItemInserted()</code>、<code>notifyItemRangeChanged()</code> 等）来告知 RecyclerView 数据发生变化，以便更新 RecyclerView 的显示。</p>
+
+
+<div class="article-footer reveal fs14"><section id="license"><div class="header"><span>许可协议</span></div><div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
+</div></section></div>
+
+</article>
+
+<div class="related-wrap reveal" id="read-next"><section class="header cap theme"><span>接下来阅读</span></section><section class="body fs14"><a id="next" href="/2022/08/25/%E5%9C%A8%E4%BA%8C%E8%BF%9B%E5%88%B6%E4%B9%8B%E5%A4%96/">在二进制之外<span class="note">较早</span></a><div class="line"></div></section></div>
+
+
+
+
+
+
+  <div class='related-wrap md reveal' id="comments">
+    <div class='cmt-title cap theme'>
+      快来参与讨论吧
+    </div>
+    <div class='cmt-body beaudar'>
+      
+
+<svg class="loading" style="vertical-align: middle;fill: currentColor;overflow: hidden;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2709"><path d="M832 512c0-176-144-320-320-320V128c211.2 0 384 172.8 384 384h-64zM192 512c0 176 144 320 320 320v64C300.8 896 128 723.2 128 512h64z" p-id="2710"></path></svg>
+
+<div id="beaudar" repo="tsparrot/cage-comments" issue-term="pathname" theme="preferred-color-scheme" input-position="top" comment-order="desc" loading="false" branch="main"></div>
+
+    </div>
+  </div>
+
+
+
+      
+<footer class="page-footer reveal fs12"><hr><div class="text"><p>本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
+<p>本站由 <a href="https://tsparrot.github.io/">@tsparrot</a> 创建，使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.7.0" title="v1.7.0">Stellar</a> 作为主题。</p>
+</div></footer>
+
+      <div class='float-panel mobile-only blur' style='display:none'>
+  <button type='button' class='sidebar-toggle mobile' onclick='sidebar.toggle()'>
+    <svg class="icon" style="width: 1em; height: 1em;vertical-align: middle;fill: currentColor;overflow: hidden;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="15301"><path d="M566.407 808.3c26.9-0.1 49.3-20.8 51.6-47.6-1.9-27.7-23.9-49.7-51.6-51.6h-412.6c-28.2-1.4-52.6 19.5-55.5 47.6 2.3 26.8 24.6 47.5 51.6 47.6h416.5v4z m309.3-249.9c26.9-0.1 49.3-20.8 51.6-47.6-2.2-26.8-24.6-47.5-51.6-47.6h-721.9c-27.7-2.8-52.5 17.4-55.3 45.1-0.1 0.8-0.1 1.7-0.2 2.5 0.9 27.2 23.6 48.5 50.7 47.6H875.707z m-103.1-245.9c26.9-0.1 49.3-20.8 51.6-47.6-0.4-28.3-23.2-51.1-51.5-51.6h-618.9c-29.5-1.1-54.3 21.9-55.5 51.4v0.2c1.4 27.8 25.2 49.2 53 47.8 0.8 0 1.7-0.1 2.5-0.2h618.8z" p-id="15302"></path><path d="M566.407 808.3c26.9-0.1 49.3-20.8 51.6-47.6-1.9-27.7-23.9-49.7-51.6-51.6h-412.6c-28.2-1.4-52.6 19.5-55.5 47.6 1.9 27.7 23.9 49.7 51.6 51.6h416.5z m309.3-249.9c26.9-0.1 49.3-20.8 51.6-47.6-2.2-26.8-24.6-47.5-51.6-47.6h-721.9c-27.7-2.8-52.5 17.4-55.3 45.1-0.1 0.8-0.1 1.7-0.2 2.5 0.9 27.2 23.6 48.5 50.7 47.6H875.707z m-103.1-245.9c26.9-0.1 49.3-20.8 51.6-47.6-0.4-28.3-23.2-51.1-51.5-51.6h-618.9c-29.5-1.1-54.3 21.9-55.5 51.4v0.2c1.4 27.8 25.2 49.2 53 47.8 0.8 0 1.7-0.1 2.5-0.2h618.8z" p-id="15303"></path></svg>
+  </button>
+</div>
+
+    </div>
+  </div>
+  <div class='scripts'>
+    <script type="text/javascript">
+  stellar = {
+    // 懒加载 css https://github.com/filamentgroup/loadCSS
+    loadCSS: (href, before, media, attributes) => {
+      var doc = window.document;
+      var ss = doc.createElement("link");
+      var ref;
+      if (before) {
+        ref = before;
+      } else {
+        var refs = (doc.body || doc.getElementsByTagName("head")[0]).childNodes;
+        ref = refs[refs.length - 1];
+      }
+      var sheets = doc.styleSheets;
+      if (attributes) {
+        for (var attributeName in attributes) {
+          if (attributes.hasOwnProperty(attributeName)) {
+            ss.setAttribute(attributeName, attributes[attributeName]);
+          }
+        }
+      }
+      ss.rel = "stylesheet";
+      ss.href = href;
+      ss.media = "only x";
+      function ready(cb) {
+        if (doc.body) {
+          return cb();
+        }
+        setTimeout(function () {
+          ready(cb);
+        });
+      }
+      ready(function () {
+        ref.parentNode.insertBefore(ss, before ? ref : ref.nextSibling);
+      });
+      var onloadcssdefined = function (cb) {
+        var resolvedHref = ss.href;
+        var i = sheets.length;
+        while (i--) {
+          if (sheets[i].href === resolvedHref) {
+            return cb();
+          }
+        }
+        setTimeout(function () {
+          onloadcssdefined(cb);
+        });
+      };
+      function loadCB() {
+        if (ss.addEventListener) {
+          ss.removeEventListener("load", loadCB);
+        }
+        ss.media = media || "all";
+      }
+      if (ss.addEventListener) {
+        ss.addEventListener("load", loadCB);
+      }
+      ss.onloadcssdefined = onloadcssdefined;
+      onloadcssdefined(loadCB);
+      return ss;
+    },
+
+    // 从 butterfly 和 volantis 获得灵感
+    loadScript: (src, opt) => new Promise((resolve, reject) => {
+      var script = document.createElement('script');
+      script.src = src;
+      if (opt) {
+        for (let key of Object.keys(opt)) {
+          script[key] = opt[key]
+        }
+      } else {
+        // 默认异步，如果需要同步，第二个参数传入 {} 即可
+        script.async = true
+      }
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    }),
+
+    // https://github.com/jerryc127/hexo-theme-butterfly
+    jQuery: (fn) => {
+      if (typeof jQuery === 'undefined') {
+        stellar.loadScript(stellar.plugins.jQuery).then(fn)
+      } else {
+        fn()
+      }
+    }
+  };
+  stellar.github = 'https://github.com/xaoxuu/hexo-theme-stellar/tree/1.7.0';
+  stellar.config = {
+    date_suffix: {
+      just: '刚刚',
+      min: '分钟前',
+      hour: '小时前',
+      day: '天前',
+      month: '个月前',
+    },
+  };
+
+  // required plugins (only load if needs)
+  stellar.plugins = {
+    jQuery: 'https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js',
+    sitesjs: '/js/plugins/sites.js',
+    friendsjs: '/js/plugins/friends.js',
+  };
+
+  // optional plugins
+  if ('true' == 'true') {
+    stellar.plugins.lazyload = Object.assign({"enable":true,"js":"https://cdn.jsdelivr.net/npm/vanilla-lazyload@17.3.1/dist/lazyload.min.js","transition":"blur"});
+  }
+  if ('true' == 'true') {
+    stellar.plugins.swiper = Object.assign({"enable":true,"css":"https://unpkg.com/swiper@6/swiper-bundle.min.css","js":"https://unpkg.com/swiper@6/swiper-bundle.min.js"});
+  }
+  if ('' == 'true') {
+    stellar.plugins.scrollreveal = Object.assign({"enable":null,"js":"https://cdn.jsdelivr.net/npm/scrollreveal@4.0.9/dist/scrollreveal.min.js","distance":"8px","duration":500,"interval":100,"scale":1});
+  }
+  if ('true' == 'true') {
+    stellar.plugins.preload = Object.assign({"enable":true,"service":"flying_pages","instant_page":"https://cdn.jsdelivr.net/gh/volantis-x/cdn-volantis@4.1.2/js/instant_page.js","flying_pages":"https://cdn.jsdelivr.net/gh/gijo-varghese/flying-pages@2.1.2/flying-pages.min.js"});
+  }
+  if ('true' == 'true') {
+    stellar.plugins.fancybox = Object.assign({"enable":true,"js":"https://cdn.jsdelivr.net/npm/@fancyapps/ui@4.0/dist/fancybox.umd.js","css":"https://cdn.jsdelivr.net/npm/@fancyapps/ui@4.0/dist/fancybox.css","selector":".swiper-slide img"});
+  }
+  if ('false' == 'true') {
+    stellar.plugins.heti = Object.assign({"enable":false,"css":"https://unpkg.com/heti/umd/heti.min.css","js":"https://unpkg.com/heti/umd/heti-addon.min.js"});
+  }
+</script>
+
+<!-- required -->
+
+  
+<script src="/js/main.js" async></script>
+
+
+
+<!-- optional -->
+
+  <script>
+  function loadBeaudar() {
+    const els = document.querySelectorAll("#comments #beaudar");
+    if (els.length === 0) return;
+    els.forEach((el, i) => {
+      try {
+        el.innerHTML = '';
+      } catch (error) {
+        console.log(error);
+      }
+      var script = document.createElement('script');
+      script.src = 'https://beaudar.lipk.org/client.js';
+      script.async = true;
+      for (let key of Object.keys(el.attributes)) {
+        let attr = el.attributes[key];
+        if (['class', 'id'].includes(attr.name) === false) {
+          script.setAttribute(attr.name, attr.value);
+        }
+      }
+      el.appendChild(script);
+    });
+  }
+  window.addEventListener('DOMContentLoaded', (event) => {
+      loadBeaudar();
+  });
+</script>
+
+
+
+
+<!-- inject -->
+
+
+  </div>
+</body>
+</html>

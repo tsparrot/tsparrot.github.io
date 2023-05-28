@@ -67,7 +67,7 @@
 <div class="widget-wrap" id="markdown"><div class="widget-header cap dis-select"><span class="name">EL PSY CONGROO</span></div><div class="widget-body fs14"><p>Android开发与生活的点点滴滴</p>
 </div></div>
 
-<div class="widget-wrap" id="recent"><div class="widget-header cap dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><div class="more-item"><a class="title" href="/2022/08/25/%E5%9C%A8%E4%BA%8C%E8%BF%9B%E5%88%B6%E4%B9%8B%E5%A4%96/">在二进制之外</a></div><div class="more-item"><a class="title" href="/2021/07/15/Android%20Java%E5%B1%82%E5%B4%A9%E6%BA%83%E7%9B%91%E6%8E%A7%E6%9C%BA%E5%88%B6%E7%AE%80%E8%BF%B0%EF%BC%88%E4%B8%80%EF%BC%89%EF%BC%9ACrash%E6%94%B6%E9%9B%86%E7%AF%87/">Android Java层崩溃监控机制简述（一）：Crash收集篇</a></div><div class="more-item"><a class="title" href="/2021/06/22/Android%20%E6%9C%BA%E5%88%B6%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90(%E4%BA%8C):Android%20Util%E7%B3%BB%E5%88%97%E4%B9%8BSparseArray/">Android机制源码分析（二）：Android Util系列之SparseArray</a></div><div class="more-item"><a class="title" href="/2021/06/15/Android%20%E6%9C%BA%E5%88%B6%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90(%E4%B8%80):%20%E4%BA%8B%E4%BB%B6%E5%88%86%E5%8F%91%E6%BA%90%E7%A0%81%E6%B5%85%E6%9E%90/">Android机制源码分析（一）：事件分发源码浅析</a></div><div class="more-item"><a class="title" href="/2021/05/30/Android%20SDK%20Version%E5%B0%8F%E7%BB%93/">Android SDK Version小结</a></div></div></div>
+<div class="widget-wrap" id="recent"><div class="widget-header cap dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><div class="more-item"><a class="title" href="/2022/09/02/ConcatAdapter%E6%BA%90%E7%A0%81%E6%B5%85%E6%9E%90%EF%BC%88%E4%B8%80%EF%BC%89%EF%BC%9ARecyclerView%E6%9C%BA%E5%88%B6%E5%9B%9E%E9%A1%BE/">ConcatAdapter源码浅析（一）：RecyclerView机制回顾</a></div><div class="more-item"><a class="title" href="/2022/08/25/%E5%9C%A8%E4%BA%8C%E8%BF%9B%E5%88%B6%E4%B9%8B%E5%A4%96/">在二进制之外</a></div><div class="more-item"><a class="title" href="/2021/07/15/Android%20Java%E5%B1%82%E5%B4%A9%E6%BA%83%E7%9B%91%E6%8E%A7%E6%9C%BA%E5%88%B6%E7%AE%80%E8%BF%B0%EF%BC%88%E4%B8%80%EF%BC%89%EF%BC%9ACrash%E6%94%B6%E9%9B%86%E7%AF%87/">Android Java层崩溃监控机制简述（一）：Crash收集篇</a></div><div class="more-item"><a class="title" href="/2021/06/22/Android%20%E6%9C%BA%E5%88%B6%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90(%E4%BA%8C):Android%20Util%E7%B3%BB%E5%88%97%E4%B9%8BSparseArray/">Android机制源码分析（二）：Android Util系列之SparseArray</a></div><div class="more-item"><a class="title" href="/2021/06/15/Android%20%E6%9C%BA%E5%88%B6%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90(%E4%B8%80):%20%E4%BA%8B%E4%BB%B6%E5%88%86%E5%8F%91%E6%BA%90%E7%A0%81%E6%B5%85%E6%9E%90/">Android机制源码分析（一）：事件分发源码浅析</a></div></div></div>
 </div>
 
 
@@ -105,7 +105,11 @@
   </nav>
 </div>
 
-  <div class="post-list post"><a class="post-card post " href="/2022/08/25/%E5%9C%A8%E4%BA%8C%E8%BF%9B%E5%88%B6%E4%B9%8B%E5%A4%96/">
+  <div class="post-list post"><a class="post-card post " href="/2022/09/02/ConcatAdapter%E6%BA%90%E7%A0%81%E6%B5%85%E6%9E%90%EF%BC%88%E4%B8%80%EF%BC%89%EF%BC%9ARecyclerView%E6%9C%BA%E5%88%B6%E5%9B%9E%E9%A1%BE/">
+<article class="md"><h2 class="post-title">ConcatAdapter源码浅析（一）：RecyclerView机制回顾</h2><div class="excerpt"><p>分析ConcatAdapter源码之前，先来回顾一下RecyclerView的基本机制：
+核心机制RecyclerView 是 Android 开发中常用的用于展示列表和网格布局的控件。它的核心机制主要包括三个组件：LayoutManager（布局管理器）、Adapter（适配器）和ViewHolder（视图持有者）。
+LayoutManager（布局管理器）负责决定RecyclerView...</p></div><div class="meta cap"><span class="cap" id="post-meta">发布于&nbsp;<time datetime="2022-09-02T07:54:00.000Z">2022-09-02</time></span></div></article>
+</a><a class="post-card post " href="/2022/08/25/%E5%9C%A8%E4%BA%8C%E8%BF%9B%E5%88%B6%E4%B9%8B%E5%A4%96/">
 <article class="md"><h2 class="post-title">在二进制之外</h2><div class="excerpt"><p>简单记录在LinkedIn，Engineer在编程之外的一些工作，信息已脱敏。
 As a POC在Linkedin的业务迭代过程中，每个feature都会有一个POC，虽然全称是Point of Contact，可以直译为联络人&#x2F;接口人，但其角色更接近于feature的owner，负责统筹开发，和其他团队沟通明确需求细节，保证项目交付。我对POC职责的理解：
 在feature开发之...</p></div><div class="meta cap"><span class="cap" id="post-meta">发布于&nbsp;<time datetime="2022-08-25T07:54:00.000Z">2022-08-25</time></span></div></article>
@@ -144,11 +148,6 @@ build.gradle为默认配置
 <article class="md"><h2 class="post-title">主动思考，挑战自我——实习总结</h2><div class="excerpt"><p>自我工作总结150+次提交，18个sprint，还有3次有点尴尬的延期，借这次总结，先回顾了下自己的工作数据，从入职到现在四个月，学到了很多东西。
 技术方面，开发节奏有很大提升空间，有时候会因为一些不必要的点过度纠结，导致迟迟不能迈出第一步，有两次延期都与此有关。后来也反思过这个问题，关键在于拆分需求，把主体的框架先搭出来，避免阻塞不前。
 另外一个比较关键的问题是，如何让业务需求不止于学习使...</p></div><div class="meta cap"><span class="cap" id="post-meta">发布于&nbsp;<time datetime="2021-01-25T07:54:00.000Z">2021-01-25</time></span></div></article>
-</a><a class="post-card post " href="/2020/12/30/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E6%BC%AB%E8%B0%88%EF%BC%9A%E4%BB%8E%E4%BE%9D%E8%B5%96%E6%B3%A8%E5%85%A5%E7%9C%8B%E6%A8%A1%E5%9D%97%E8%A7%A3%E8%97%95/">
-<article class="md"><h2 class="post-title">设计模式漫谈：从依赖注入看模块解藕</h2><div class="excerpt"><p>依赖初学面向对象时，经常会举的一个例子是购物，从这个过程里很容易抽象出Customer类：
-123456789class Customer&#123;    // 下订单  public void order(Product product)();    // 支付  public void pay();&#125;
-
-而Customer的buy行为需要传入一个Product类对象，代表这个...</p></div><div class="meta cap"><span class="cap" id="post-meta">发布于&nbsp;<time datetime="2020-12-30T07:23:00.000Z">2020-12-30</time></span></div></article>
 </a></div>
   
   <div class='paginator-wrap dis-select'>
