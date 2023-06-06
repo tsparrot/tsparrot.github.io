@@ -67,7 +67,7 @@
 <div class="widget-wrap" id="markdown"><div class="widget-header cap dis-select"><span class="name">EL PSY CONGROO</span></div><div class="widget-body fs14"><p>Android开发与生活的点点滴滴</p>
 </div></div>
 
-<div class="widget-wrap" id="recent"><div class="widget-header cap dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><div class="more-item"><a class="title" href="/2022/09/02/ConcatAdapter%E6%BA%90%E7%A0%81%E6%B5%85%E6%9E%90%EF%BC%88%E4%B8%80%EF%BC%89%EF%BC%9ARecyclerView%E6%9C%BA%E5%88%B6%E5%9B%9E%E9%A1%BE/">ConcatAdapter源码浅析（一）：RecyclerView机制回顾</a></div><div class="more-item"><a class="title" href="/2022/08/25/%E5%9C%A8%E4%BA%8C%E8%BF%9B%E5%88%B6%E4%B9%8B%E5%A4%96/">在二进制之外</a></div><div class="more-item"><a class="title" href="/2021/07/15/Android%20Java%E5%B1%82%E5%B4%A9%E6%BA%83%E7%9B%91%E6%8E%A7%E6%9C%BA%E5%88%B6%E7%AE%80%E8%BF%B0%EF%BC%88%E4%B8%80%EF%BC%89%EF%BC%9ACrash%E6%94%B6%E9%9B%86%E7%AF%87/">Android Java层崩溃监控机制简述（一）：Crash收集篇</a></div><div class="more-item"><a class="title" href="/2021/06/22/Android%20%E6%9C%BA%E5%88%B6%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90(%E4%BA%8C):Android%20Util%E7%B3%BB%E5%88%97%E4%B9%8BSparseArray/">Android机制源码分析（二）：Android Util系列之SparseArray</a></div><div class="more-item"><a class="title" href="/2021/06/15/Android%20%E6%9C%BA%E5%88%B6%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90(%E4%B8%80):%20%E4%BA%8B%E4%BB%B6%E5%88%86%E5%8F%91%E6%BA%90%E7%A0%81%E6%B5%85%E6%9E%90/">Android机制源码分析（一）：事件分发源码浅析</a></div></div></div>
+<div class="widget-wrap" id="recent"><div class="widget-header cap dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><div class="more-item"><a class="title" href="/2022/09/02/ConcatAdapter%E6%BA%90%E7%A0%81%E6%B5%85%E6%9E%90%EF%BC%88%E4%B8%80%EF%BC%89%EF%BC%9ARecyclerView%E6%9C%BA%E5%88%B6%E5%9B%9E%E9%A1%BE/">ConcatAdapter源码浅析（一）：RecyclerView机制回顾</a></div><div class="more-item"><a class="title" href="/2022/08/25/%E5%9C%A8%E4%BA%8C%E8%BF%9B%E5%88%B6%E4%B9%8B%E5%A4%96/">在二进制之外</a></div><div class="more-item"><a class="title" href="/2021/07/15/Android%20Java%E5%B1%82%E5%B4%A9%E6%BA%83%E7%9B%91%E6%8E%A7%E6%9C%BA%E5%88%B6%E7%AE%80%E8%BF%B0%EF%BC%88%E4%B8%80%EF%BC%89%EF%BC%9ACrash%E6%94%B6%E9%9B%86%E7%AF%87/">Android Java层崩溃监控机制简述（一）：Crash收集篇</a></div><div class="more-item"><a class="title" href="/2021/07/15/Bitmap%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0%EF%BC%88%E4%B8%80%EF%BC%89%EF%BC%9A%E5%9C%A8Android%E4%B8%AD%E5%A6%82%E4%BD%95%E5%8E%8B%E7%BC%A9%E4%B8%80%E4%B8%AABitmap/">Bitmap源码学习（一）：在Android中如何压缩一个Bitmap</a></div><div class="more-item"><a class="title" href="/2021/06/22/Android%20%E6%9C%BA%E5%88%B6%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90(%E4%BA%8C):Android%20Util%E7%B3%BB%E5%88%97%E4%B9%8BSparseArray/">Android机制源码分析（二）：Android Util系列之SparseArray</a></div></div></div>
 </div>
 
 
@@ -105,7 +105,10 @@
   </nav>
 </div>
 
-  <div class="post-list post"><a class="post-card post " href="/2021/01/25/%E4%B8%BB%E5%8A%A8%E6%80%9D%E8%80%83%EF%BC%8C%E6%8C%91%E6%88%98%E8%87%AA%E6%88%91%E2%80%94%E2%80%94%E5%AE%9E%E4%B9%A0%E6%80%BB%E7%BB%93/">
+  <div class="post-list post"><a class="post-card post " href="/2021/03/10/%E4%BB%8EPressableTextView%20click%20%E8%B8%A9%E5%9D%91%E7%9C%8B%E4%BA%8B%E4%BB%B6%E5%88%86%E5%8F%91/">
+<article class="md"><h2 class="post-title">从PressableTextView click 踩坑看事件分发</h2><div class="excerpt"><p>背景介绍开发过程中某个页面利用自定义的pressableTextView 作为底部按钮。
+该自定义View重写了textView的onTouchEvent，以增加一个透明度为0.5的按压态，具体机制是对当前的MoveEvent事件作判断，如果是Action_Down则把该TextView的透明度设置为0.5f，如果是Action_Up 或者 Action_Cancel则把透明度设置回1.0f...</p></div><div class="meta cap"><span class="cap" id="post-meta">发布于&nbsp;<time datetime="2021-03-10T04:00:00.000Z">2021-03-10</time></span></div></article>
+</a><a class="post-card post " href="/2021/01/25/%E4%B8%BB%E5%8A%A8%E6%80%9D%E8%80%83%EF%BC%8C%E6%8C%91%E6%88%98%E8%87%AA%E6%88%91%E2%80%94%E2%80%94%E5%AE%9E%E4%B9%A0%E6%80%BB%E7%BB%93/">
 <article class="md"><h2 class="post-title">主动思考，挑战自我——实习总结</h2><div class="excerpt"><p>自我工作总结150+次提交，18个sprint，还有3次有点尴尬的延期，借这次总结，先回顾了下自己的工作数据，从入职到现在四个月，学到了很多东西。
 技术方面，开发节奏有很大提升空间，有时候会因为一些不必要的点过度纠结，导致迟迟不能迈出第一步，有两次延期都与此有关。后来也反思过这个问题，关键在于拆分需求，把主体的框架先搭出来，避免阻塞不前。
 另外一个比较关键的问题是，如何让业务需求不止于学习使...</p></div><div class="meta cap"><span class="cap" id="post-meta">发布于&nbsp;<time datetime="2021-01-25T07:54:00.000Z">2021-01-25</time></span></div></article>
@@ -160,10 +163,6 @@ Django collected_staticdjango拥有极为便捷的一键收集静态资源功能
 <article class="md"><h2 class="post-title">面试复盘-今日的滑铁卢</h2><div class="excerpt"><p>人生中的第一次面试，伴着昨天骤降的气温与雨，这样到来了。
 突然的降温带给我的还有突然的感冒，尽管今天天气已经晴朗，人却还昏昏沉沉的。面试约在了下午两点，十二点数据库课下，或者因为感冒或者因为紧张，没什么吃午饭的心思，在教室里继续看了一个小时的leetcode，便骑着自行车上路了。
 说起来在西土城住了已有一个多月，却也没怎么在周围转过，跟着导航慢悠悠地往中兴大厦骑，也顺便观察一下四环的北京，车...</p></div><div class="meta cap"><span class="cap" id="post-meta">发布于&nbsp;<time datetime="2019-10-14T12:44:00.000Z">2019-10-14</time></span></div></article>
-</a><a class="post-card post " href="/2019/04/03/%E5%85%B3%E4%BA%8E%E6%AD%BB%E4%BA%A1/">
-<article class="md"><h2 class="post-title">关于死亡</h2><div class="excerpt"><p>凌晨伴着腹部的绞痛醒来，好像是久违地吃坏了肚子。抱紧被子仍然不能缓解，于是也睡不着了，开始胡思乱想，仿佛我并不是两个半小时前才刚刚睡下的。
-大概是神智仍在朦胧与现实的边缘，脑海中一直是莫名奇妙的“新世纪球队”这样不知道有什么意义的字眼，怪力乱神一般，甚至不能集中注意力想事情，然后想到每晚的熬夜，想到作息的紊乱，乃至想到身边人常常提及我却从不以为然的猝死之类的事。
-平常确实会有很多时候，觉得这...</p></div><div class="meta cap"><span class="cap" id="post-meta">发布于&nbsp;<time datetime="2019-04-02T23:30:00.000Z">2019-04-03</time></span></div></article>
 </a></div>
   
   <div class='paginator-wrap dis-select'>

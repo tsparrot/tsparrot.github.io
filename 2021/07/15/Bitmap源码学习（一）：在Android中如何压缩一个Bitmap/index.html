@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang='zh-CN'>
+
+<head>
+  <meta name="generator" content="Hexo 6.3.0">
+  <meta charset="utf-8">
+  
+
+  <meta http-equiv='x-dns-prefetch-control' content='on' />
+  <link rel='dns-prefetch' href='https://cdn.jsdelivr.net'>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel='dns-prefetch' href='//unpkg.com'>
+
+  <meta name="renderer" content="webkit">
+  <meta name="force-rendering" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  <meta name="HandheldFriendly" content="True" >
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="theme-color" content="#f8f8f8">
+  <title>Bitmap源码学习（一）：在Android中如何压缩一个Bitmap - 鹦鹉学舌</title>
+
+  
+
+  
+    <meta name="description" content="Bitmap.createScaledBitmap源码分析123456789101112131415161718192021public static Bitmap createScaledBitmap(@NonNull Bitmap src, int dstWidth, int dstHeight,            boolean filter) &amp;#123;        &#x2F;&#x2F; 创建一个">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Bitmap源码学习（一）：在Android中如何压缩一个Bitmap">
+<meta property="og:url" content="https://tsparrot.github.io/2021/07/15/Bitmap%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0%EF%BC%88%E4%B8%80%EF%BC%89%EF%BC%9A%E5%9C%A8Android%E4%B8%AD%E5%A6%82%E4%BD%95%E5%8E%8B%E7%BC%A9%E4%B8%80%E4%B8%AABitmap/index.html">
+<meta property="og:site_name" content="鹦鹉学舌">
+<meta property="og:description" content="Bitmap.createScaledBitmap源码分析123456789101112131415161718192021public static Bitmap createScaledBitmap(@NonNull Bitmap src, int dstWidth, int dstHeight,            boolean filter) &amp;#123;        &#x2F;&#x2F; 创建一个">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2021-07-14T16:00:00.000Z">
+<meta property="article:modified_time" content="2021-07-14T16:00:00.000Z">
+<meta property="article:author" content="tsparrot">
+<meta property="article:tag" content="Android">
+<meta name="twitter:card" content="summary">
+  
+  
+
+  <!-- feed -->
+  
+
+  
+    
+<link rel="stylesheet" href="/css/main.css">
+
+  
+
+  
+
+  
+</head>
+
+<body>
+  
+
+
+
+
+  <div class='l_body' id='start'>
+    <aside class='l_left' layout='post'>
+    
+
+
+<header class="header">
+
+<div class="logo-wrap"><a class="title" href="/"><div class="main">鹦鹉学舌</div><div class="sub cap">tsparrot's blog</div></a></div>
+<nav class="menu dis-select"><a class="nav-item active" href="/">博客</a><a class="nav-item" href="/about/">关于</a></nav></header>
+
+<div class="widgets">
+
+<div class="widget-wrap single" id="toc"><div class="widget-header cap dis-select"><span class="name">本文目录</span></div><div class="widget-body fs14"><div class="doc-tree active"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Bitmap-createScaledBitmap%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90"><span class="toc-text">Bitmap.createScaledBitmap源码分析</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Bitmap-createBitmap"><span class="toc-text">Bitmap.createBitmap</span></a></li></ol></div></div></div>
+
+
+</div>
+
+
+    </aside>
+    <div class='l_main'>
+      
+
+      
+
+<div class="bread-nav fs12"><div id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a><span class="sep"></span><a class="cap breadcrumb" href="/">文章</a></div><div id="post-meta">发布于&nbsp;<time datetime="2021-07-14T16:00:00.000Z">2021-07-15</time></div></div>
+
+<article class='content md post'>
+<h1 class="article-title"><span>Bitmap源码学习（一）：在Android中如何压缩一个Bitmap</span></h1>
+<h2 id="Bitmap-createScaledBitmap源码分析"><a href="#Bitmap-createScaledBitmap源码分析" class="headerlink" title="Bitmap.createScaledBitmap源码分析"></a>Bitmap.createScaledBitmap源码分析</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> Bitmap <span class="title function_">createScaledBitmap</span><span class="params">(<span class="meta">@NonNull</span> Bitmap src, <span class="type">int</span> dstWidth, <span class="type">int</span> dstHeight,</span></span><br><span class="line"><span class="params">            <span class="type">boolean</span> filter)</span> &#123;</span><br><span class="line">        <span class="comment">// 创建一个矩阵对象，用于缩放操作</span></span><br><span class="line">        <span class="type">Matrix</span> <span class="variable">m</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Matrix</span>();</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 获取原始图片的宽度和高度</span></span><br><span class="line">        <span class="keyword">final</span> <span class="type">int</span> <span class="variable">width</span> <span class="operator">=</span> src.getWidth();</span><br><span class="line">        <span class="keyword">final</span> <span class="type">int</span> <span class="variable">height</span> <span class="operator">=</span> src.getHeight();</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 如果原始图片的宽度或高度与目标宽度或高度不一致</span></span><br><span class="line">        <span class="keyword">if</span> (width != dstWidth || height != dstHeight) &#123;</span><br><span class="line">            <span class="comment">// 计算宽度和高度的缩放比例</span></span><br><span class="line">            <span class="keyword">final</span> <span class="type">float</span> <span class="variable">sx</span> <span class="operator">=</span> dstWidth / (<span class="type">float</span>) width;</span><br><span class="line">            <span class="keyword">final</span> <span class="type">float</span> <span class="variable">sy</span> <span class="operator">=</span> dstHeight / (<span class="type">float</span>) height;</span><br><span class="line">            <span class="comment">// 设置矩阵对象的缩放比例</span></span><br><span class="line">            m.setScale(sx, sy);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 根据矩阵对象进行缩放操作，并返回缩放后的 Bitmap 对象</span></span><br><span class="line">        <span class="keyword">return</span> Bitmap.createBitmap(src, <span class="number">0</span>, <span class="number">0</span>, width, height, m, filter);</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<p>这段代码用于将原始的 Bitmap 对象按照指定的宽度和高度进行缩放，生成一个新的经过缩放的 Bitmap 对象。缩放过程通过矩阵对象 <code>m</code> 进行操作，实现宽高比例的调整：</p>
+<ol>
+<li>创建一个 Matrix 对象 <code>m</code>，用于后续的缩放操作。</li>
+<li>获取原始 Bitmap 的宽度和高度。</li>
+<li>判断原始图片的宽度或高度是否与目标宽度或高度不一致。</li>
+<li>如果不一致，则计算宽度和高度的缩放比例，并使用 <code>setScale()</code> 方法设置到矩阵对象 <code>m</code> 中。</li>
+<li>使用 <code>Bitmap.createBitmap()</code> 方法，根据原始 Bitmap、矩阵对象 <code>m</code>、滤波器标志 <code>filter</code> 进行缩放操作，返回缩放后的 Bitmap 对象。</li>
+</ol>
+<h2 id="Bitmap-createBitmap"><a href="#Bitmap-createBitmap" class="headerlink" title="Bitmap.createBitmap"></a>Bitmap.createBitmap</h2><p>可以看出Bitmap中压缩图片的方法在计算出压缩比例后调用了创建从原Bitmap创建新Bitmap的方法，下面来进一步分析这一过程</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> Bitmap <span class="title function_">createBitmap</span><span class="params">(<span class="meta">@NonNull</span> Bitmap source, <span class="type">int</span> x, <span class="type">int</span> y, <span class="type">int</span> width, <span class="type">int</span> height,</span></span><br><span class="line"><span class="params">            <span class="meta">@Nullable</span> Matrix m, <span class="type">boolean</span> filter)</span> &#123;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 检查坐标值是否为非负数</span></span><br><span class="line">        checkXYSign(x, y);</span><br><span class="line">        <span class="comment">// 检查宽度和高度是否为正数</span></span><br><span class="line">        checkWidthHeight(width, height);</span><br><span class="line">        <span class="comment">// 检查x、y和width、height的和是否小于等于原始图片的宽度和高度</span></span><br><span class="line">        <span class="keyword">if</span> (x + width &gt; source.getWidth()) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalArgumentException</span>(<span class="string">&quot;x + width must be &lt;= bitmap.width()&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (y + height &gt; source.getHeight()) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalArgumentException</span>(<span class="string">&quot;y + height must be &lt;= bitmap.height()&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 检查源 Bitmap 是否已被回收</span></span><br><span class="line">        <span class="keyword">if</span> (source.isRecycled()) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalArgumentException</span>(<span class="string">&quot;cannot use a recycled source in createBitmap&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 检查是否可以直接返回原始 Bitmap（无需进行任何操作）</span></span><br><span class="line">        <span class="keyword">if</span> (!source.isMutable() &amp;&amp; x == <span class="number">0</span> &amp;&amp; y == <span class="number">0</span> &amp;&amp; width == source.getWidth() &amp;&amp;</span><br><span class="line">                height == source.getHeight() &amp;&amp; (m == <span class="literal">null</span> || m.isIdentity())) &#123;</span><br><span class="line">            <span class="keyword">return</span> source;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 检查是否为硬件加速的 Bitmap</span></span><br><span class="line">        <span class="type">boolean</span> <span class="variable">isHardware</span> <span class="operator">=</span> source.getConfig() == Config.HARDWARE;</span><br><span class="line">        <span class="keyword">if</span> (isHardware) &#123;</span><br><span class="line">            source.noteHardwareBitmapSlowCall();</span><br><span class="line">            source = nativeCopyPreserveInternalConfig(source.mNativePtr);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="type">int</span> <span class="variable">neww</span> <span class="operator">=</span> width;</span><br><span class="line">        <span class="type">int</span> <span class="variable">newh</span> <span class="operator">=</span> height;</span><br><span class="line">        Bitmap bitmap;</span><br><span class="line">        Paint paint;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 创建源矩形和目标矩形</span></span><br><span class="line">        <span class="type">Rect</span> <span class="variable">srcR</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Rect</span>(x, y, x + width, y + height);</span><br><span class="line">        <span class="type">RectF</span> <span class="variable">dstR</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">RectF</span>(<span class="number">0</span>, <span class="number">0</span>, width, height);</span><br><span class="line">        <span class="type">RectF</span> <span class="variable">deviceR</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">RectF</span>();</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 设置新的 Bitmap 的配置</span></span><br><span class="line">        <span class="type">Config</span> <span class="variable">newConfig</span> <span class="operator">=</span> Config.ARGB_8888;</span><br><span class="line">        <span class="keyword">final</span> <span class="type">Config</span> <span class="variable">config</span> <span class="operator">=</span> source.getConfig();</span><br><span class="line">        <span class="keyword">if</span> (config != <span class="literal">null</span>) &#123;</span><br><span class="line">            <span class="keyword">switch</span> (config) &#123;</span><br><span class="line">                <span class="keyword">case</span> RGB_565:</span><br><span class="line">                    newConfig = Config.RGB_565;</span><br><span class="line">                    <span class="keyword">break</span>;</span><br><span class="line">                <span class="keyword">case</span> ALPHA_8:</span><br><span class="line">                    newConfig = Config.ALPHA_8;</span><br><span class="line">                    <span class="keyword">break</span>;</span><br><span class="line">                <span class="keyword">case</span> RGBA_F16:</span><br><span class="line">                    newConfig = Config.RGBA_F16;</span><br><span class="line">                    <span class="keyword">break</span>;</span><br><span class="line">                <span class="keyword">case</span> ARGB_4444:</span><br><span class="line">                <span class="keyword">case</span> ARGB_8888:</span><br><span class="line">                <span class="keyword">default</span>:</span><br><span class="line">                    newConfig = Config.ARGB_8888;</span><br><span class="line">                    <span class="keyword">break</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="type">ColorSpace</span> <span class="variable">cs</span> <span class="operator">=</span> source.getColorSpace();</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (m == <span class="literal">null</span> || m.isIdentity()) &#123;</span><br><span class="line">            <span class="comment">// 不需要变换，直接创建新的 Bitmap</span></span><br><span class="line">            bitmap = createBitmap(<span class="literal">null</span>, neww, newh, newConfig, source.hasAlpha(), cs);</span><br><span class="line">            paint = <span class="literal">null</span>; <span class="comment">// 不需要绘制操作</span></span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="keyword">final</span> <span class="type">boolean</span> <span class="variable">transformed</span> <span class="operator">=</span> !m.rectStaysRect();</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 将目标矩形通过矩阵变换得到设备矩形</span></span><br><span class="line">            m.mapRect(deviceR, dstR);</span><br><span class="line"></span><br><span class="line">            neww = Math.round(deviceR.width());</span><br><span class="line">            newh = Math.round(deviceR.height());</span><br><span class="line"></span><br><span class="line">            <span class="type">Config</span> <span class="variable">transformedConfig</span> <span class="operator">=</span> newConfig;</span><br><span class="line">            <span class="keyword">if</span> (transformed) &#123;</span><br><span class="line">                <span class="keyword">if</span> (transformedConfig != Config.ARGB_8888 &amp;&amp; transformedConfig != Config.RGBA_F16) &#123;</span><br><span class="line">                    transformedConfig = Config.ARGB_8888;</span><br><span class="line">                    <span class="keyword">if</span> (cs == <span class="literal">null</span>) &#123;</span><br><span class="line">                        cs = Color</span><br><span class="line"></span><br><span class="line">Space.get(ColorSpace.Named.SRGB);</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 根据变换后的宽度、高度和配置创建新的 Bitmap</span></span><br><span class="line">            bitmap = createBitmap(<span class="literal">null</span>, neww, newh, transformedConfig,</span><br><span class="line">                    transformed || source.hasAlpha(), cs);</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 创建画笔对象，并设置滤波器和抗锯齿</span></span><br><span class="line">            paint = <span class="keyword">new</span> <span class="title class_">Paint</span>();</span><br><span class="line">            paint.setFilterBitmap(filter);</span><br><span class="line">            <span class="keyword">if</span> (transformed) &#123;</span><br><span class="line">                paint.setAntiAlias(<span class="literal">true</span>);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 设置新的 Bitmap 的一些属性</span></span><br><span class="line">        bitmap.mDensity = source.mDensity;</span><br><span class="line">        bitmap.setHasAlpha(source.hasAlpha());</span><br><span class="line">        bitmap.setPremultiplied(source.mRequestPremultiplied);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 创建画布对象，并进行画布的平移和矩阵的变换</span></span><br><span class="line">        <span class="type">Canvas</span> <span class="variable">canvas</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Canvas</span>(bitmap);</span><br><span class="line">        canvas.translate(-deviceR.left, -deviceR.top);</span><br><span class="line">        canvas.concat(m);</span><br><span class="line">        <span class="comment">// 在画布上绘制源 Bitmap</span></span><br><span class="line">        canvas.drawBitmap(source, srcR, dstR, paint);</span><br><span class="line">        canvas.setBitmap(<span class="literal">null</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 如果是硬件加速的 Bitmap，则复制一个硬件加速的 Bitmap 返回</span></span><br><span class="line">        <span class="keyword">if</span> (isHardware) &#123;</span><br><span class="line">            <span class="keyword">return</span> bitmap.copy(Config.HARDWARE, <span class="literal">false</span>);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> bitmap;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<p>这段代码的执行过程如下：</p>
+<ol>
+<li>检查输入参数的合法性，包括坐标值、宽度和高度的范围，以及源 Bitmap 是否已被回收。</li>
+<li>检查是否可以直接返回原始 Bitmap（无需进行任何操作）。</li>
+<li>如果原始 Bitmap 是硬件加速的，则创建一个软件拷贝用于后续操作。</li>
+<li>创建新的 Bitmap 对象以及用于绘制的画笔对象。</li>
+<li>根据变换参数和目标矩形计算新的宽度和高度。</li>
+<li>根据源 Bitmap 的配置和颜色空间设置新的 Bitmap 的配置。</li>
+<li>根据是否需要变换进行不同的创建操作。<ul>
+<li>如果不需要变换，则直接创建新的 Bitmap 对象。</li>
+<li>如果需要变换，则根据变换后的宽度、高度和配置创建新的 Bitmap 对象，并设置画笔的滤波器和抗锯齿属性。</li>
+</ul>
+</li>
+<li>设置新的 Bitmap 的一些属性，如密度、是否有透明度等。</li>
+<li>创建画布对象，并进行画布的平移和矩阵的变换。</li>
+<li>在画布上绘制源 Bitmap，根据裁剪和变换的参数进行绘制操作。</li>
+<li>清空画布对象，并根据是否是硬件加速的 Bitmap 复制一个相同配置的 Bitmap 返回。</li>
+</ol>
+<p>至此，我们就得到了压缩后的新Bitmap，期间会涉及到将原始 Bitmap 对象的像素数据按照缩放比例复制到新的 Bitmap 对象中，涉及到插值计算的概念，感兴趣的话可以进一步了解，这里就不赘述了</p>
+
+
+<div class="article-footer reveal fs14"><section id="license"><div class="header"><span>许可协议</span></div><div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
+</div></section></div>
+
+</article>
+
+<div class="related-wrap reveal" id="read-next"><section class="header cap theme"><span>接下来阅读</span></section><section class="body fs14"><a id="next" href="/2021/06/22/Android%20%E6%9C%BA%E5%88%B6%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90(%E4%BA%8C):Android%20Util%E7%B3%BB%E5%88%97%E4%B9%8BSparseArray/">Android机制源码分析（二）：Android Util系列之SparseArray<span class="note">较早</span></a><div class="line"></div><a id="prev" href="/2021/07/15/Android%20Java%E5%B1%82%E5%B4%A9%E6%BA%83%E7%9B%91%E6%8E%A7%E6%9C%BA%E5%88%B6%E7%AE%80%E8%BF%B0%EF%BC%88%E4%B8%80%EF%BC%89%EF%BC%9ACrash%E6%94%B6%E9%9B%86%E7%AF%87/">Android Java层崩溃监控机制简述（一）：Crash收集篇<span class="note">较新</span></a></section></div>
+
+
+
+
+
+
+  <div class='related-wrap md reveal' id="comments">
+    <div class='cmt-title cap theme'>
+      快来参与讨论吧
+    </div>
+    <div class='cmt-body beaudar'>
+      
+
+<svg class="loading" style="vertical-align: middle;fill: currentColor;overflow: hidden;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2709"><path d="M832 512c0-176-144-320-320-320V128c211.2 0 384 172.8 384 384h-64zM192 512c0 176 144 320 320 320v64C300.8 896 128 723.2 128 512h64z" p-id="2710"></path></svg>
+
+<div id="beaudar" repo="tsparrot/cage-comments" issue-term="pathname" theme="preferred-color-scheme" input-position="top" comment-order="desc" loading="false" branch="main"></div>
+
+    </div>
+  </div>
+
+
+
+      
+<footer class="page-footer reveal fs12"><hr><div class="text"><p>本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
+<p>本站由 <a href="https://tsparrot.github.io/">@tsparrot</a> 创建，使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.7.0" title="v1.7.0">Stellar</a> 作为主题。</p>
+</div></footer>
+
+      <div class='float-panel mobile-only blur' style='display:none'>
+  <button type='button' class='sidebar-toggle mobile' onclick='sidebar.toggle()'>
+    <svg class="icon" style="width: 1em; height: 1em;vertical-align: middle;fill: currentColor;overflow: hidden;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="15301"><path d="M566.407 808.3c26.9-0.1 49.3-20.8 51.6-47.6-1.9-27.7-23.9-49.7-51.6-51.6h-412.6c-28.2-1.4-52.6 19.5-55.5 47.6 2.3 26.8 24.6 47.5 51.6 47.6h416.5v4z m309.3-249.9c26.9-0.1 49.3-20.8 51.6-47.6-2.2-26.8-24.6-47.5-51.6-47.6h-721.9c-27.7-2.8-52.5 17.4-55.3 45.1-0.1 0.8-0.1 1.7-0.2 2.5 0.9 27.2 23.6 48.5 50.7 47.6H875.707z m-103.1-245.9c26.9-0.1 49.3-20.8 51.6-47.6-0.4-28.3-23.2-51.1-51.5-51.6h-618.9c-29.5-1.1-54.3 21.9-55.5 51.4v0.2c1.4 27.8 25.2 49.2 53 47.8 0.8 0 1.7-0.1 2.5-0.2h618.8z" p-id="15302"></path><path d="M566.407 808.3c26.9-0.1 49.3-20.8 51.6-47.6-1.9-27.7-23.9-49.7-51.6-51.6h-412.6c-28.2-1.4-52.6 19.5-55.5 47.6 1.9 27.7 23.9 49.7 51.6 51.6h416.5z m309.3-249.9c26.9-0.1 49.3-20.8 51.6-47.6-2.2-26.8-24.6-47.5-51.6-47.6h-721.9c-27.7-2.8-52.5 17.4-55.3 45.1-0.1 0.8-0.1 1.7-0.2 2.5 0.9 27.2 23.6 48.5 50.7 47.6H875.707z m-103.1-245.9c26.9-0.1 49.3-20.8 51.6-47.6-0.4-28.3-23.2-51.1-51.5-51.6h-618.9c-29.5-1.1-54.3 21.9-55.5 51.4v0.2c1.4 27.8 25.2 49.2 53 47.8 0.8 0 1.7-0.1 2.5-0.2h618.8z" p-id="15303"></path></svg>
+  </button>
+</div>
+
+    </div>
+  </div>
+  <div class='scripts'>
+    <script type="text/javascript">
+  stellar = {
+    // 懒加载 css https://github.com/filamentgroup/loadCSS
+    loadCSS: (href, before, media, attributes) => {
+      var doc = window.document;
+      var ss = doc.createElement("link");
+      var ref;
+      if (before) {
+        ref = before;
+      } else {
+        var refs = (doc.body || doc.getElementsByTagName("head")[0]).childNodes;
+        ref = refs[refs.length - 1];
+      }
+      var sheets = doc.styleSheets;
+      if (attributes) {
+        for (var attributeName in attributes) {
+          if (attributes.hasOwnProperty(attributeName)) {
+            ss.setAttribute(attributeName, attributes[attributeName]);
+          }
+        }
+      }
+      ss.rel = "stylesheet";
+      ss.href = href;
+      ss.media = "only x";
+      function ready(cb) {
+        if (doc.body) {
+          return cb();
+        }
+        setTimeout(function () {
+          ready(cb);
+        });
+      }
+      ready(function () {
+        ref.parentNode.insertBefore(ss, before ? ref : ref.nextSibling);
+      });
+      var onloadcssdefined = function (cb) {
+        var resolvedHref = ss.href;
+        var i = sheets.length;
+        while (i--) {
+          if (sheets[i].href === resolvedHref) {
+            return cb();
+          }
+        }
+        setTimeout(function () {
+          onloadcssdefined(cb);
+        });
+      };
+      function loadCB() {
+        if (ss.addEventListener) {
+          ss.removeEventListener("load", loadCB);
+        }
+        ss.media = media || "all";
+      }
+      if (ss.addEventListener) {
+        ss.addEventListener("load", loadCB);
+      }
+      ss.onloadcssdefined = onloadcssdefined;
+      onloadcssdefined(loadCB);
+      return ss;
+    },
+
+    // 从 butterfly 和 volantis 获得灵感
+    loadScript: (src, opt) => new Promise((resolve, reject) => {
+      var script = document.createElement('script');
+      script.src = src;
+      if (opt) {
+        for (let key of Object.keys(opt)) {
+          script[key] = opt[key]
+        }
+      } else {
+        // 默认异步，如果需要同步，第二个参数传入 {} 即可
+        script.async = true
+      }
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    }),
+
+    // https://github.com/jerryc127/hexo-theme-butterfly
+    jQuery: (fn) => {
+      if (typeof jQuery === 'undefined') {
+        stellar.loadScript(stellar.plugins.jQuery).then(fn)
+      } else {
+        fn()
+      }
+    }
+  };
+  stellar.github = 'https://github.com/xaoxuu/hexo-theme-stellar/tree/1.7.0';
+  stellar.config = {
+    date_suffix: {
+      just: '刚刚',
+      min: '分钟前',
+      hour: '小时前',
+      day: '天前',
+      month: '个月前',
+    },
+  };
+
+  // required plugins (only load if needs)
+  stellar.plugins = {
+    jQuery: 'https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js',
+    sitesjs: '/js/plugins/sites.js',
+    friendsjs: '/js/plugins/friends.js',
+  };
+
+  // optional plugins
+  if ('true' == 'true') {
+    stellar.plugins.lazyload = Object.assign({"enable":true,"js":"https://cdn.jsdelivr.net/npm/vanilla-lazyload@17.3.1/dist/lazyload.min.js","transition":"blur"});
+  }
+  if ('true' == 'true') {
+    stellar.plugins.swiper = Object.assign({"enable":true,"css":"https://unpkg.com/swiper@6/swiper-bundle.min.css","js":"https://unpkg.com/swiper@6/swiper-bundle.min.js"});
+  }
+  if ('' == 'true') {
+    stellar.plugins.scrollreveal = Object.assign({"enable":null,"js":"https://cdn.jsdelivr.net/npm/scrollreveal@4.0.9/dist/scrollreveal.min.js","distance":"8px","duration":500,"interval":100,"scale":1});
+  }
+  if ('true' == 'true') {
+    stellar.plugins.preload = Object.assign({"enable":true,"service":"flying_pages","instant_page":"https://cdn.jsdelivr.net/gh/volantis-x/cdn-volantis@4.1.2/js/instant_page.js","flying_pages":"https://cdn.jsdelivr.net/gh/gijo-varghese/flying-pages@2.1.2/flying-pages.min.js"});
+  }
+  if ('true' == 'true') {
+    stellar.plugins.fancybox = Object.assign({"enable":true,"js":"https://cdn.jsdelivr.net/npm/@fancyapps/ui@4.0/dist/fancybox.umd.js","css":"https://cdn.jsdelivr.net/npm/@fancyapps/ui@4.0/dist/fancybox.css","selector":".swiper-slide img"});
+  }
+  if ('false' == 'true') {
+    stellar.plugins.heti = Object.assign({"enable":false,"css":"https://unpkg.com/heti/umd/heti.min.css","js":"https://unpkg.com/heti/umd/heti-addon.min.js"});
+  }
+</script>
+
+<!-- required -->
+
+  
+<script src="/js/main.js" async></script>
+
+
+
+<!-- optional -->
+
+  <script>
+  function loadBeaudar() {
+    const els = document.querySelectorAll("#comments #beaudar");
+    if (els.length === 0) return;
+    els.forEach((el, i) => {
+      try {
+        el.innerHTML = '';
+      } catch (error) {
+        console.log(error);
+      }
+      var script = document.createElement('script');
+      script.src = 'https://beaudar.lipk.org/client.js';
+      script.async = true;
+      for (let key of Object.keys(el.attributes)) {
+        let attr = el.attributes[key];
+        if (['class', 'id'].includes(attr.name) === false) {
+          script.setAttribute(attr.name, attr.value);
+        }
+      }
+      el.appendChild(script);
+    });
+  }
+  window.addEventListener('DOMContentLoaded', (event) => {
+      loadBeaudar();
+  });
+</script>
+
+
+
+
+<!-- inject -->
+
+
+  </div>
+</body>
+</html>
