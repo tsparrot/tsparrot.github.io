@@ -18,20 +18,20 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <meta name="theme-color" content="#f8f8f8">
-  <title>Bitmap源码学习（一）：在Android中如何压缩一个Bitmap - 鹦鹉学舌</title>
+  <title>Bitmap源码学习：在Android中如何压缩一个Bitmap - 鹦鹉学舌</title>
 
   
 
   
     <meta name="description" content="Bitmap.createScaledBitmap源码分析123456789101112131415161718192021public static Bitmap createScaledBitmap(@NonNull Bitmap src, int dstWidth, int dstHeight,            boolean filter) &amp;#123;        &#x2F;&#x2F; 创建一个">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Bitmap源码学习（一）：在Android中如何压缩一个Bitmap">
-<meta property="og:url" content="https://tsparrot.github.io/2021/07/15/Bitmap%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0%EF%BC%88%E4%B8%80%EF%BC%89%EF%BC%9A%E5%9C%A8Android%E4%B8%AD%E5%A6%82%E4%BD%95%E5%8E%8B%E7%BC%A9%E4%B8%80%E4%B8%AABitmap/index.html">
+<meta property="og:title" content="Bitmap源码学习：在Android中如何压缩一个Bitmap">
+<meta property="og:url" content="https://tsparrot.github.io/2021/07/11/Bitmap%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0%EF%BC%88%E4%B8%80%EF%BC%89%EF%BC%9A%E5%9C%A8Android%E4%B8%AD%E5%A6%82%E4%BD%95%E5%8E%8B%E7%BC%A9%E4%B8%80%E4%B8%AABitmap/index.html">
 <meta property="og:site_name" content="鹦鹉学舌">
 <meta property="og:description" content="Bitmap.createScaledBitmap源码分析123456789101112131415161718192021public static Bitmap createScaledBitmap(@NonNull Bitmap src, int dstWidth, int dstHeight,            boolean filter) &amp;#123;        &#x2F;&#x2F; 创建一个">
 <meta property="og:locale" content="zh_CN">
-<meta property="article:published_time" content="2021-07-14T16:00:00.000Z">
-<meta property="article:modified_time" content="2021-07-14T16:00:00.000Z">
+<meta property="article:published_time" content="2021-07-10T16:00:00.000Z">
+<meta property="article:modified_time" content="2021-07-10T16:00:00.000Z">
 <meta property="article:author" content="tsparrot">
 <meta property="article:tag" content="Android">
 <meta name="twitter:card" content="summary">
@@ -82,10 +82,10 @@
 
       
 
-<div class="bread-nav fs12"><div id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a><span class="sep"></span><a class="cap breadcrumb" href="/">文章</a></div><div id="post-meta">发布于&nbsp;<time datetime="2021-07-14T16:00:00.000Z">2021-07-15</time></div></div>
+<div class="bread-nav fs12"><div id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a><span class="sep"></span><a class="cap breadcrumb" href="/">文章</a></div><div id="post-meta">发布于&nbsp;<time datetime="2021-07-10T16:00:00.000Z">2021-07-11</time></div></div>
 
 <article class='content md post'>
-<h1 class="article-title"><span>Bitmap源码学习（一）：在Android中如何压缩一个Bitmap</span></h1>
+<h1 class="article-title"><span>Bitmap源码学习：在Android中如何压缩一个Bitmap</span></h1>
 <h2 id="Bitmap-createScaledBitmap源码分析"><a href="#Bitmap-createScaledBitmap源码分析" class="headerlink" title="Bitmap.createScaledBitmap源码分析"></a>Bitmap.createScaledBitmap源码分析</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> Bitmap <span class="title function_">createScaledBitmap</span><span class="params">(<span class="meta">@NonNull</span> Bitmap src, <span class="type">int</span> dstWidth, <span class="type">int</span> dstHeight,</span></span><br><span class="line"><span class="params">            <span class="type">boolean</span> filter)</span> &#123;</span><br><span class="line">        <span class="comment">// 创建一个矩阵对象，用于缩放操作</span></span><br><span class="line">        <span class="type">Matrix</span> <span class="variable">m</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Matrix</span>();</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 获取原始图片的宽度和高度</span></span><br><span class="line">        <span class="keyword">final</span> <span class="type">int</span> <span class="variable">width</span> <span class="operator">=</span> src.getWidth();</span><br><span class="line">        <span class="keyword">final</span> <span class="type">int</span> <span class="variable">height</span> <span class="operator">=</span> src.getHeight();</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 如果原始图片的宽度或高度与目标宽度或高度不一致</span></span><br><span class="line">        <span class="keyword">if</span> (width != dstWidth || height != dstHeight) &#123;</span><br><span class="line">            <span class="comment">// 计算宽度和高度的缩放比例</span></span><br><span class="line">            <span class="keyword">final</span> <span class="type">float</span> <span class="variable">sx</span> <span class="operator">=</span> dstWidth / (<span class="type">float</span>) width;</span><br><span class="line">            <span class="keyword">final</span> <span class="type">float</span> <span class="variable">sy</span> <span class="operator">=</span> dstHeight / (<span class="type">float</span>) height;</span><br><span class="line">            <span class="comment">// 设置矩阵对象的缩放比例</span></span><br><span class="line">            m.setScale(sx, sy);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 根据矩阵对象进行缩放操作，并返回缩放后的 Bitmap 对象</span></span><br><span class="line">        <span class="keyword">return</span> Bitmap.createBitmap(src, <span class="number">0</span>, <span class="number">0</span>, width, height, m, filter);</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
 
 <p>这段代码用于将原始的 Bitmap 对象按照指定的宽度和高度进行缩放，生成一个新的经过缩放的 Bitmap 对象。缩放过程通过矩阵对象 <code>m</code> 进行操作，实现宽高比例的调整：</p>
